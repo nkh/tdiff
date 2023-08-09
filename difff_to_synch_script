@@ -1,0 +1,15 @@
+#!/bin/bash
+
+read -r d1 ; read -r d2
+
+while read -r diff ; do
+	[[ "$diff" =~ \<diff\> ]] && 
+		{
+		perl -e '$ARGV[0] =~/^<diff>(.+)<diff>(.+)/ and print "return 1 # chose one\ncp -v \"$1\" \"$2\"\ncp \"$2\" \"$1\"\n\n"' "$diff"
+		} ||
+		{
+		perl -e 'my ($s, $d1, $d2) = (@ARGV, "") ; chomp $s ; $r = "-r" if -d $s ; $d = $s ; $d =~ s/^\Q$d1/$d2/ or $d =~ s/^\Q$d2/$d1/ ; print "cp -v $r \"$s\" \"$d\"\n\n"' "$diff" "$d1" "$d2"
+		}
+	done
+
+# vim: set ft=bash:

@@ -1,0 +1,13 @@
+#!/bin/bash
+
+: ${1:?need two director to diff}
+: ${2:?need two director to diff}
+
+cp_file=$(mktemp -p /tmp/$USER/ diff_synch_XXXXXXXX)
+
+{ difff -p "$1" "$2" | difff_to_synch_script >$cp_file ; } && \
+	[[ -s $cp_file ]] && vim $cp_file -c 'set nospell' && \
+		{ source $cp_file || { echo "$0: error, sync_file: $cp_file" ; false ; } ; }
+
+# vim: set ft=bash:
+
