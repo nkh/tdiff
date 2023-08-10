@@ -1,4 +1,8 @@
 
+fzf to diff
+
+open ftl, which directory?
+
 diff options compatibility with -q
 	-b will not ignore the difference
 
