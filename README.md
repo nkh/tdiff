@@ -16,11 +16,23 @@
 
 | short      | long          | function                                         |
 | ---------- | ------------- | ------------------------------------------------ |
+|            | --no-diff     | no file diff, when comparing lists               |
 
 ## Bindings
 
 | binding | function                       |
 | ------- | ------------------------------ |
+
+
+# EXAMPLES
+
+## find which directories are in one but not the other
+
+TDFA='-type d' tdiff --no-diff test/dir*
+
+## Compare 2 lists
+
+tdiff <(echo -e 'abc\ndef\n123\n456') <(echo -e 'abc\ndef1\n1234\n456') 
 
 # DEPENDENCIES
 
@@ -29,7 +41,7 @@
 - Awk
 - tree
 - diff
-- Paneless 
+- Paneless https://github.com/nkh/paneless
 
 # INSTALL
 

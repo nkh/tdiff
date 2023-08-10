@@ -1,9 +1,15 @@
 fs="$(mktemp -u -p /tmp/$USER tree_diff_XXXXXX)" ;
 mkdir -p $fs # work directory
+:>$fs/diff_files
 
+FIND1=${FIND1:-$TDF1} FIND1=${FIND1:-$TDF} FIND1=${FIND1:-find *}
+FIND2=${FIND2:-$TDF2} FIND2=${FIND2:-$TDF} FIND2=${FIND2:-find *}
 
-(cd "$1" ; find * | sort >$fs/fd1) &
-(cd "$2" ; find * | sort >$fs/fd2) &
+FIND1A=${FIND1A:-$TDF1A} FIND1A=${FIND1A:-$TDFA}
+FIND2A=${FIND2A:-$TDF2A} FIND2A=${FIND2A:-$TDFA}
+
+([[ -d "$1" ]] && { cd "$1" ; $FIND1 $FIND1A | sort >$fs/fd1 ; } || cat "$1" >$fs/fd1) &
+([[ -d "$2" ]] && { cd "$2" ; $FIND2 $FIND2A | sort >$fs/fd2 ; } || cat "$2" >$fs/fd2) &
 wait
 
 awk 'NR==FNR { a[$0]; next } !($0 in a)' $fs/fd2 $fs/fd1 >$fs/only_d1 &
@@ -11,7 +17,7 @@ awk 'NR==FNR { a[$0]; next } !($0 in a)' $fs/fd1 $fs/fd2 >$fs/only_d2 &
 wait
 
 cat $fs/fd1 $fs/fd2 | tree -C --fromfile -f --noreport >$fs/tree_all_color &
-diff -r -q "$1" "$2" | rg Files | perl -pe 's/^Files (.+) and.+/$1/' | sed 's#'"$1"'/##' >$fs/diff_files &
+((do_diff)) && [[ "$1" && "$2" ]] && diff -r -q "$1" "$2" | rg Files | perl -pe 's/^Files (.+) and.+/$1/' | sed 's#'"$1"'/##' >$fs/diff_files &
 wait
 
 perl $(dirname $0)/tag_tree.pl "$1" "$DIFF" "$DELETED" $fs/diff_files $fs/only_d2 $fs/tree_all_color >$fs/tree_d1 &

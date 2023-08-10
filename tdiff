@@ -1,8 +1,38 @@
 
-export DELETED=$'\e[38;5;252;48;5;52m' ; export DIFF=$'\e[38;5;252;48;5;27m' 
+export DELETED=$'\e[38;5;252;48;5;52m' ; export DIFF=$'\e[38;5;252;48;5;25m' 
+export do_diff=1
+
+# Parse options
+[[ "$1" ]]  || { echo "paneless: need at least one input" ; exit 1 ; }
+
+options=$(getopt -o h -l help,no-diff -n "$0" -- "$@") || exit
+eval set -- "$options"
+
+while [[ $1 != -- ]]; do
+	case $1 in
+		--no-diff       ) do_diff= ; shift   ;;
+		-h|--help       )
+				echo "NAME"
+				echo "    tdiff - tree diff visualization"
+				echo
+				echo "SYNOPSIS"
+				echo "    tdiff dir dir"
+				echo "    tdiff file <(...)"
+				echo
+				echo "OPTIONS"
+				echo "    --no-diff    no file diff"
+				exit ;;
+		*               ) echo "tdiff: bad option: $1" >&2; exit 1;;
+	esac
+done
+
+shift # -- in argument list to getopt
+
+[[ -d "$1" && -d "$2" || -f "$1" && -f "$2" ]] || { echo tdiff: comparind uncompatible types ; exit 1 ; }
 
 { read td1 ; read td2 ; } < <($(dirname $0)/tree_synch "$1" "$2")
 
-paneless -a --no-color "$td1" "$td2"
+paneless -a --no-color -c $(dirname $0)/tdiff.pless "$td1" "$td2"
+
 
 # vim: set ft=bash:

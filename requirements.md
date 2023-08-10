@@ -4,13 +4,17 @@ An interactive terminal directory diff application
 
 # General features
 
-- The application accepts two. or more, directory paths as mandatory arguments
+- The application accepts two. or more, directory paths as mandatory arguments, or two lists, or two commands to generate lists, or two lists, or two commands to generate lists
 
 - Users can choose among different modes such as name-based, content-based, size-based, or timestamp-based comparison. The default mode is name-based comparison.
 
 - Specify the output format for the comparison results. Options to display results in the terminal or exporting them to a file.
 
-- By default, the application performs a recursive comparison of the directories, an option can provided to disable recursive comparison.
+- An option can limit the depth of the diff.
+
+- filter files base on when they were modified last, options to find, different filter for each side possible
+
+- option are in a file, passed as an argument in ENV variable
 
 - Ignore Patterns
 
