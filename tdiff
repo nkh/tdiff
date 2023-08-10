@@ -45,6 +45,7 @@ read tree_all_no_color
 
 paneless -a --no-color "$tree_d1" "$tree_d2" \
 		-c $(dirname $0)/tdiff.pless \
+		--status-line \
 			-e "dir1=$1" \
 			-e "dir2=$2" \
 			-e "diff_files=$diff_files" \
