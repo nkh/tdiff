@@ -1,6 +1,7 @@
 
 export DELETED=$'\e[38;5;252;48;5;52m' ; export DIFF=$'\e[38;5;252;48;5;25m' 
 export do_diff=1
+export TDDIFF
 
 # Parse options
 [[ "$1" ]]  || { echo "paneless: need at least one input" ; exit 1 ; }
@@ -30,9 +31,27 @@ shift # -- in argument list to getopt
 
 [[ -d "$1" && -d "$2" || -f "$1" && -f "$2" ]] || { echo tdiff: comparind uncompatible types ; exit 1 ; }
 
-{ read td1 ; read td2 ; } < <($(dirname $0)/tree_synch "$1" "$2")
+{
+read tree_d1
+read tree_d2
+read fd1
+read fd2
+read diff_files
+read only_d1
+read only_d2
+read tree_all_no_color
+# read tree_all_color
+} < <($(dirname $0)/tree_synch "$1" "$2")
 
-paneless -a --no-color -c $(dirname $0)/tdiff.pless "$td1" "$td2"
+paneless -a --no-color "$tree_d1" "$tree_d2" \
+		-c $(dirname $0)/tdiff.pless \
+			-e "dir1=$1" \
+			-e "dir2=$2" \
+			-e "diff_files=$diff_files" \
+			-e "only_d1=$only_d1" \
+			-e "only_d2=$only_d2" \
+			-e "tree_all_no_color=$tree_all_no_color"
 
+# echo "diff_files=$diff_files" "only_d1=$only_d1" "only_d2=$only_d2" "tree_all_no_color=$tree_all_no_color"
 
 # vim: set ft=bash:

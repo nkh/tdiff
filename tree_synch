@@ -17,13 +17,15 @@ awk 'NR==FNR { a[$0]; next } !($0 in a)' $fs/fd1 $fs/fd2 >$fs/only_d2 &
 wait
 
 cat $fs/fd1 $fs/fd2 | tree -C --fromfile -f --noreport >$fs/tree_all_color &
-((do_diff)) && [[ "$1" && "$2" ]] && diff -r -q "$1" "$2" | rg Files | perl -pe 's/^Files (.+) and.+/$1/' | sed 's#'"$1"'/##' >$fs/diff_files &
+cat $fs/fd1 $fs/fd2 | tree -n --fromfile -f -i --noreport >$fs/tree_all_no_color &
+((do_diff)) && [[ "$1" && "$2" ]] && diff $TDDIFF -r -q "$1" "$2" | rg Files | perl -pe 's/^Files (.+) and.+/$1/' | sed 's#'"$1"'/##' >$fs/diff_files &
 wait
+
 
 perl $(dirname $0)/tag_tree.pl "$1" "$DIFF" "$DELETED" $fs/diff_files $fs/only_d2 $fs/tree_all_color >$fs/tree_d1 &
 perl $(dirname $0)/tag_tree.pl "$2" "$DIFF" "$DELETED" $fs/diff_files $fs/only_d1 $fs/tree_all_color >$fs/tree_d2 &
 wait
 
-printf "%s\n" $fs/tree_d1 $fs/tree_d2 $fs/fd1 $fs/fd2 $fs/diff_files $fs/only_d1 $fs/only_d2 $fs/tree_all_color
+printf "%s\n" $fs/tree_d1 $fs/tree_d2 $fs/fd1 $fs/fd2 $fs/diff_files $fs/only_d1 $fs/only_d2 $fs/tree_all_no_color $fs/tree_all_color
 
 # vim: set ft=bash:

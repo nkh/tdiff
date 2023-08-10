@@ -1,0 +1,51 @@
+
+bind custom tdiff		n		next_difference		"next difference"
+bind custom tdiff		N		previous_difference	"previous difference"
+
+bind custom tdiff		ENTER		open_diff		"open diff"
+
+open_diff()
+{
+entry="$(tail -n +$((top_line + 1)) "${e[tree_all_no_color]}" | head -n 1)"
+
+if   [[ -f "${e[dir1]}/$entry" &&  -f "${e[dir2]}/$entry" ]] ; then vimdiff "${e[dir1]}/$entry" "${e[dir2]}/$entry"
+elif [[ -f "${e[dir1]}/$entry" ]] ;                            then vim "${e[dir1]}/$entry"
+elif [[ -f "${e[dir2]}/$entry" ]] ;                            then vim "${e[dir2]}/$entry"
+fi
+
+list
+}
+
+diff_index=
+max_diff=$(<"${e[diff_files]}" wc -l)
+
+next_difference()
+{
+((diff_index++))
+((diff_index > max_diff)) && diff_index=0 ;
+
+next_diff="$(tail -n +$diff_index "${e[diff_files]}" | head -n 1)"
+
+found=$(tail -n +$((top_line + 2)) "${e[tree_all_no_color]}" | rg -n -m 1 "$next_diff" | cut -d: -f1)
+
+[[ "$found" ]] && { ((top_line += found)) ; highlight=1 ; list ; } || { highlight= ; list ; }
+}
+
+previous_difference()
+{
+((diff_index--))
+((diff_index < 0 )) && diff_index=0 ;
+
+next_diff="$(tail -n +$diff_index ${e[diff_files]} | head -n 1)"
+
+found=$(head -n $top_line "${e[tree_all_no_color]}" | tac | rg -n -m 1 "$next_diff" | cut -d: -f1)
+
+[[ "$found" ]] && { ((top_line -= found)) ; highlight=1 ; list ; } || { highlight= ; list ; }
+}
+
+# "only_d1=$only_d1"
+# "only_d2=$only_d2"
+
+# vim: set ft=bash:
+
+

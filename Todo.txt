@@ -1,0 +1,5 @@
+
+diff options compatibility with -q
+	-b will not ignore the difference
+
+
