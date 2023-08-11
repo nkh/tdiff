@@ -1,7 +1,7 @@
 
-view only files modified or deleted
+config for viewers
 
-view with only diff
+synch files and directories
 
 open ftl, which directory?
 

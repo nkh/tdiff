@@ -6,12 +6,13 @@ export TDDIFF
 # Parse options
 [[ "$1" ]]  || { echo "paneless: need at least one input" ; exit 1 ; }
 
-options=$(getopt -o h -l help,no-diff -n "$0" -- "$@") || exit
+options=$(getopt -o h,m: -l help,no-diff,mode: -n "$0" -- "$@") || exit
 eval set -- "$options"
 
 while [[ $1 != -- ]]; do
 	case $1 in
 		--no-diff       ) do_diff= ; shift   ;;
+		-m|--mode       ) mode=$2  ; shift 2 ;;
 		-h|--help       )
 				echo "NAME"
 				echo "    tdiff - tree diff visualization"
@@ -30,6 +31,9 @@ done
 shift # -- in argument list to getopt
 
 [[ -d "$1" && -d "$2" || -f "$1" && -f "$2" ]] || { echo tdiff: comparing uncompatible types ; exit 1 ; }
+[[ "$mode" ]] && { [[ "$mode" == all || "$mode" == common || "$mode" = diff ]] || { echo "tdiff: valid modes: all|common|diff" ; exit 1 ; } ; }
+
+mode=${mode:-all} 
 
 {
 read fd1
@@ -54,13 +58,17 @@ read tree_common_diff_index
 read tree_diff_color 
 read tree_diff_no_color 
 read tree_diff 
-read tree_diff_index
+read tree_diff_diff_index
 } < <($(dirname $0)/tree_synch "$1" "$2")
 
-paneless -a --no-color "$tree_all_d1" "$tree_all_d2" \
+[[ "$mode" == all    ]] && { tree1="$tree_all_d1"    ; tree2="$tree_all_d2"    ; }
+[[ "$mode" == common ]] && { tree1="$tree_common_d1" ; tree2="$tree_common_d2" ; }
+[[ "$mode" == diff   ]] && { tree1="$tree_diff"      ; tree2=                  ; }
+
+paneless -a --no-color $tree1 $tree2 \
 		-c $(dirname $0)/tdiff.pless \
 		--status-line \
-			-e "mode=all" \
+			-e "mode=$mode" \
 			-e "dir1=$1" \
 			-e "dir2=$2" \
 			-e "diff_files=$diff_files" \
@@ -71,9 +79,18 @@ paneless -a --no-color "$tree_all_d1" "$tree_all_d2" \
 			-e "tree_all_d1_delete_index=$tree_all_d1_delete_index" \
 			-e "tree_all_d2_delete_index=$tree_all_d2_delete_index" \
 			-e "tree_all_diff_index=$tree_all_diff_index" \
+			-e "tree_common_color=$tree_common_color" \
+			-e "tree_common_no_color=$tree_common_no_color" \
+			-e "tree_common_d1=$tree_common_d1" \
+			-e "tree_common_d1_delete_index=$tree_common_d1_delete_index" \
+			-e "tree_common_d2=$tree_common_d2" \
+			-e "tree_common_d2_delete_index=$tree_common_d2_delete_index" \
+			-e "tree_common_diff_index=$tree_common_diff_index" \
+			-e "tree_diff_color=$tree_diff_color" \
+			-e "tree_diff_no_color=$tree_diff_no_color" \
 			-e "tree_diff=$tree_diff" \
-			-e "tree_diff_index=$tree_diff_index"
+			-e "tree_diff_diff_index=$tree_diff_diff_index"
 
-echo "tdiff: work directory: $(dirname $fd1) 
+echo "tdiff: work directory: $(dirname $fd1)" 
 
 # vim: set ft=bash:

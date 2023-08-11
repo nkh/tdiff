@@ -8,12 +8,13 @@ bind custom tdiff		ENTER		open_diff		"open diff"
 
 open_diff()
 {
-entry="$(tail -n +$((top_line + 1)) "${e[tree_all_no_color]}" | head -n 1)"
+no_color_key="tree_${e[mode]}_no_color"
+entry="$(tail -n +$((top_line + 1)) "${e[$no_color_key]}" | head -n 1)"
 
-if   [[ -f "${e[dir1]}/$entry" &&  -f "${e[dir2]}/$entry" ]] ; then vimdiff "${e[dir1]}/$entry" "${e[dir2]}/$entry"
-elif [[ -f "${e[dir1]}/$entry" ]] ;                            then vim "${e[dir1]}/$entry"
-elif [[ -f "${e[dir2]}/$entry" ]] ;                            then vim "${e[dir2]}/$entry"
-else                                                           tmux new-window "ftl '${e[dir2]}/$entry'"
+if   [[ -f "${e[dir1]}/$entry" && -f "${e[dir2]}/$entry" ]] ; then vimdiff "${e[dir1]}/$entry" "${e[dir2]}/$entry"
+elif [[ -f "${e[dir1]}/$entry" ]] ;                           then vim "${e[dir1]}/$entry"
+elif [[ -f "${e[dir2]}/$entry" ]] ;                           then vim "${e[dir2]}/$entry"
+else                                                          tmux new-window "ftl '${e[dir2]}/$entry'"
 fi
 
 echo -en '\e[?1049h\e[2J' ; stty -echo ; tput civis
@@ -46,7 +47,9 @@ diff_fzf()
 exec 2>&9
 
 diff_file="$(cat ${e[diff_files]} | fzf +s --ansi --keep-right)"
-found=$(rg -n -m 1 "\./$diff_file" "${e[tree_all_no_color]}" | cut -d: -f1)
+
+no_color_key="tree_${e[mode]}_no_color"
+found=$(rg -n -m 1 "\./$diff_file" "${e[$no_color_key]}" | cut -d: -f1)
 
 [[ "$found" ]] && { ((top_line = found - 1)) ; highlight=1 ; } || { highlight= ; }
 

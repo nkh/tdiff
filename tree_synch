@@ -42,7 +42,7 @@ cat $fs/diff_files | tree -C --fromfile -f --noreport >$fs/tree_diff_color &
 cat $fs/diff_files | tree -n --fromfile -f -i --noreport >$fs/tree_diff_no_color &
 wait
 
-perl $(dirname $0)/tag_tree.pl "$1-$2" "$DIFF" "" $fs/diff_files <(:) $fs/tree_diff_color >$fs/tree_diff 3>$fs/tree_diff_index 4>/dev/null &
+perl $(dirname $0)/tag_tree.pl "$1-$2" "$DIFF" "" $fs/diff_files <(:) $fs/tree_diff_color >$fs/tree_diff 3>$fs/tree_diff_diff_index 4>/dev/null &
 
 printf "%s\n" \
 	$fs/fd1 \
@@ -60,10 +60,13 @@ printf "%s\n" \
 	$fs/tree_common_color \
 	$fs/tree_common_no_color \
 	$fs/tree_common_d1 \
+	$fs/tree_common_d1_delete_index \
 	$fs/tree_common_d2 \
+	$fs/tree_common_d2_delete_index \
+	$fs/tree_common_diff_index \
 	$fs/tree_diff_color \
 	$fs/tree_diff_no_color \
 	$fs/tree_diff \
-	$fs/tree_diff_index 
+	$fs/tree_diff_diff_index 
 
 # vim: set ft=bash:
