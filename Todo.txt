@@ -1,5 +1,7 @@
 
-fzf to diff
+view only files modified or deleted
+
+view with only diff
 
 open ftl, which directory?
 

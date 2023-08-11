@@ -21,33 +21,24 @@ echo -en '\e[?1049h\e[2J' ; stty -echo ; tput civis
 list
 }
 
-diff_index=
-max_diff=$(<"${e[diff_files]}" wc -l)
+index_key="tree_${e[mode]}_diff_index"
+<"${e[$index_key]}" readarray -t diff_index
+< <(tac "${e[$index_key]}") readarray -t diff_index_reversed
+
 deleted_dir1=$(<"${e[only_d2]}" wc -l)
 deleted_dir2=$(<"${e[only_d1]}" wc -l)
 
 next_difference()
 {
-((diff_index++))
-((diff_index > max_diff)) && diff_index=0 ;
-
-next_diff="$(tail -n +$diff_index "${e[diff_files]}" | head -n 1)"
-
-found=$(tail -n +$((top_line + 2)) "${e[tree_all_no_color]}" | rg -n -m 1 "$next_diff" | cut -d: -f1)
-
-[[ "$found" ]] && { ((top_line += found)) ; highlight=1 ; list ; } || { highlight= ; list ; }
+found=
+for i in "${diff_index[@]}" ; do ((i > top_line)) && { found=$i ; break ; } ; done 
+[[ "$found" ]] && { ((top_line = found)) ; highlight=1 ; list ; } || { highlight= ; list ; }
 }
 
 previous_difference()
 {
-((diff_index--))
-((diff_index < 0 )) && diff_index=0 ;
-
-next_diff="$(tail -n +$diff_index ${e[diff_files]} | head -n 1)"
-
-found=$(head -n $top_line "${e[tree_all_no_color]}" | tac | rg -n -m 1 "$next_diff" | cut -d: -f1)
-
-[[ "$found" ]] && { ((top_line -= found)) ; highlight=1 ; list ; } || { highlight= ; list ; }
+for i in "${diff_index_reversed[@]}" ; do ((i < top_line)) && { found=$i ; break ; } ; done 
+[[ "$found" ]] && { ((top_line = found)) ; highlight=1 ; list ; } || { highlight= ; list ; }
 }
 
 diff_fzf()
@@ -68,9 +59,10 @@ list
 
 update_status()
 {
-current_entry="$(tail -n +$((top_line + 1)) ${e[tree_all_no_color]} | head -n 1)"
+no_color_key="tree_${e[mode]}_no_color"
+current_entry="..$(tail -n +$((top_line + 1)) ${e[$no_color_key]} | head -n 1)"
 
-echo -en "\e[$((bottom_line + 2));0H\e[K\e[38;5;240mtdiff: ${e[dir1]} deleted: $deleted_dir1, ${e[dir2]} deleted: $deleted_dir2, diffs: $max_diff, current: $current_entry\e[m"
+echo -en "\e[$((bottom_line + 2));0H\e[K\e[38;5;240mtdiff: ${e[dir1]} deleted: $deleted_dir1, ${e[dir2]} deleted: $deleted_dir2, diffs: ${#diff_index[@]}, current: $current_entry\e[m"
 }
 
 # vim: set ft=bash:

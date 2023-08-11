@@ -4,7 +4,9 @@ An interactive terminal diff application
 
 # General features
 
-- The application accepts two. or more, directores, files, commands that generate lists
+- The application accepts two, directores, files, commands that generate lists
+
+- three directories mode
 
 - option: exporting diff files
 
@@ -14,25 +16,22 @@ An interactive terminal diff application
 
 - Version Control Integration, an option for users to specify specific revisions or branches to compare against.
 
-- Directory Comparison between Two Git Branches
-
-# Filtering
-
-- Inclusion Filter
-
-- Exclusion Filter, also available in the config
+# Filtering before diff
 
 - Multiple Filters
+	- Inclusion Filter
+	- Exclusion Filter
 
 - Combining Filters or use external filter written in a more advanced language
+	needs a diff that takes a list of files not directories
 
 - option: limit the depth of the diff.
 
-- filter files base on when they were modified last, options to find, different filter for each side possible
+- filter files bases on when they were modified last, options to find
+
+- different filter for each side possible
 
 - Case Sensitivity, case-sensitive or case-insensitive when matching file and folder names.
-
-- Exclude Empty Directories
 
 # * -mtime -3
 # -not -path "*/\.git/*"
@@ -58,33 +57,27 @@ An interactive terminal diff application
 
 # Display
 
-- Details Panel: - file size, modification date, and permissions
+- Details Panel: - file size, modification date
 
-- preview 
+- preview, open in ftl
 
 - Side-by-Side Content Preview/Diff
 
 - Synchronize the content between the two directories.
 
-- Copy and Delete files/folders.
-
-- Progress Indicators.
+- Delete files/folders.
 
 - Search Functionality.
 
 - Keyboard Shortcuts
 
-- Multi-Select Functionality for copying, moving, or deleting.
-
-- Undo/Redo Functionality
+- Multi-Select Functionality for editing, copying, moving, or deleting.
 
 - Open Diff Files in Text Editor, in hexdiff 
 
 - Open Directories in File Manager
 
 - Customizable Editors and File Managers
-
-- Color the tree glyphs to show where the diffs are located
 
 - Hierarchical Tree View, collapsible/expandable, remember the folding.
 
