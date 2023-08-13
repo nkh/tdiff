@@ -22,6 +22,7 @@
 
 | short      | long          | function                                         |
 | ---------- | ------------- | ------------------------------------------------ |
+| -g         |               | generate diff data and exit                      |
 | -m         | --mode        | modes: all|common|diff, default:all              |
 |            | --no-diff     | no file diff, when comparing lists               |
 

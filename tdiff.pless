@@ -70,7 +70,8 @@ update_status()
 no_color_key="tree_${e[mode]}_no_color"
 current_entry="..$(tail -n +$((top_line + 1)) ${e[$no_color_key]} | head -n 1)"
 
-echo -en "\e[$((bottom_line + 2));0H\e[K\e[38;5;240mtdiff: ${e[dir1]} deleted: $deleted_dir1, ${e[dir2]} deleted: $deleted_dir2, diffs: ${#diff_index[@]}, current: $current_entry\e[m"
+status=$(cut -c1-$COLUMNS <<<"[-$deleted_dir1, -$deleted_dir2, !${#diff_index[@]}] $current_entry\e[m")
+echo -en "\e[$((bottom_line + 2));0H\e[K\e[38;5;240m$status\e[m"
 }
 
 # vim: set ft=bash:

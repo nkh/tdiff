@@ -2,17 +2,19 @@
 export DELETED=$'\e[38;5;252;48;5;52m' ; export DIFF=$'\e[38;5;252;48;5;25m' 
 export do_diff=1
 export TDDIFF
+interactive=1
 
 # Parse options
 [[ "$1" ]]  || { echo "paneless: need at least one input" ; exit 1 ; }
 
-options=$(getopt -o h,m: -l help,no-diff,mode: -n "$0" -- "$@") || exit
+options=$(getopt -o g,h,m: -l help,no-diff,mode: -n "$0" -- "$@") || exit
 eval set -- "$options"
 
 while [[ $1 != -- ]]; do
 	case $1 in
-		--no-diff       ) do_diff= ; shift   ;;
-		-m|--mode       ) mode=$2  ; shift 2 ;;
+		--no-diff       ) do_diff=      ; shift   ;;
+		-m|--mode       ) mode=$2       ; shift 2 ;;
+		-g              ) interactive=0 ; shift   ;;
 		-h|--help       )
 				echo "NAME"
 				echo "    tdiff - tree diff visualization"
@@ -23,6 +25,8 @@ while [[ $1 != -- ]]; do
 				echo
 				echo "OPTIONS"
 				echo "    --no-diff    no file diff"
+				echo "    --mode       all|common|diff"
+				echo "    -g           generate only"
 				exit ;;
 		*               ) echo "tdiff: bad option: $1" >&2; exit 1;;
 	esac
@@ -65,31 +69,31 @@ read tree_diff_diff_index
 [[ "$mode" == common ]] && { tree1="$tree_common_d1" ; tree2="$tree_common_d2" ; }
 [[ "$mode" == diff   ]] && { tree1="$tree_diff"      ; tree2=                  ; }
 
-paneless -a --no-color $tree1 $tree2 \
-		-c $(dirname $0)/tdiff.pless \
-		--status-line \
-			-e "mode=$mode" \
-			-e "dir1=$1" \
-			-e "dir2=$2" \
-			-e "diff_files=$diff_files" \
-			-e "only_d1=$only_d1" \
-			-e "only_d2=$only_d2" \
-			-e "tree_all_color=$tree_all__color" \
-			-e "tree_all_no_color=$tree_all_no_color" \
-			-e "tree_all_d1_delete_index=$tree_all_d1_delete_index" \
-			-e "tree_all_d2_delete_index=$tree_all_d2_delete_index" \
-			-e "tree_all_diff_index=$tree_all_diff_index" \
-			-e "tree_common_color=$tree_common_color" \
-			-e "tree_common_no_color=$tree_common_no_color" \
-			-e "tree_common_d1=$tree_common_d1" \
-			-e "tree_common_d1_delete_index=$tree_common_d1_delete_index" \
-			-e "tree_common_d2=$tree_common_d2" \
-			-e "tree_common_d2_delete_index=$tree_common_d2_delete_index" \
-			-e "tree_common_diff_index=$tree_common_diff_index" \
-			-e "tree_diff_color=$tree_diff_color" \
-			-e "tree_diff_no_color=$tree_diff_no_color" \
-			-e "tree_diff=$tree_diff" \
-			-e "tree_diff_diff_index=$tree_diff_diff_index"
+((interactive)) && paneless -a --no-color $tree1 $tree2 \
+			-c $(dirname $0)/tdiff.pless \
+			--status-line \
+				-e "mode=$mode" \
+				-e "dir1=$1" \
+				-e "dir2=$2" \
+				-e "diff_files=$diff_files" \
+				-e "only_d1=$only_d1" \
+				-e "only_d2=$only_d2" \
+				-e "tree_all_color=$tree_all__color" \
+				-e "tree_all_no_color=$tree_all_no_color" \
+				-e "tree_all_d1_delete_index=$tree_all_d1_delete_index" \
+				-e "tree_all_d2_delete_index=$tree_all_d2_delete_index" \
+				-e "tree_all_diff_index=$tree_all_diff_index" \
+				-e "tree_common_color=$tree_common_color" \
+				-e "tree_common_no_color=$tree_common_no_color" \
+				-e "tree_common_d1=$tree_common_d1" \
+				-e "tree_common_d1_delete_index=$tree_common_d1_delete_index" \
+				-e "tree_common_d2=$tree_common_d2" \
+				-e "tree_common_d2_delete_index=$tree_common_d2_delete_index" \
+				-e "tree_common_diff_index=$tree_common_diff_index" \
+				-e "tree_diff_color=$tree_diff_color" \
+				-e "tree_diff_no_color=$tree_diff_no_color" \
+				-e "tree_diff=$tree_diff" \
+				-e "tree_diff_diff_index=$tree_diff_diff_index"
 
 echo "tdiff: work directory: $(dirname $fd1)" 
 
