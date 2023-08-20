@@ -7,7 +7,7 @@ interactive=1
 # Parse options
 [[ "$1" ]]  || { echo "paneless: need at least one input" ; exit 1 ; }
 
-options=$(getopt -o g,h,m: -l help,no-diff,mode: -n "$0" -- "$@") || exit
+options=$(getopt -o g,h,m: -l help,no-diff,mode:,og -n "$0" -- "$@") || exit
 eval set -- "$options"
 
 while [[ $1 != -- ]]; do
@@ -15,6 +15,7 @@ while [[ $1 != -- ]]; do
 		--no-diff       ) do_diff=      ; shift   ;;
 		-m|--mode       ) mode=$2       ; shift 2 ;;
 		-g              ) interactive=0 ; shift   ;;
+		--og            ) option_og=1   ; shift   ;;
 		-h|--help       )
 				echo "NAME"
 				echo "    tdiff - tree diff visualization"
@@ -27,6 +28,7 @@ while [[ $1 != -- ]]; do
 				echo "    --no-diff    no file diff"
 				echo "    --mode       all|common|diff"
 				echo "    -g           generate only"
+				echo "    --og         display generation directory"
 				exit ;;
 		*               ) echo "tdiff: bad option: $1" >&2; exit 1;;
 	esac
@@ -34,7 +36,8 @@ done
 
 shift # -- in argument list to getopt
 
-[[ -d "$1" && -d "$2" || -f "$1" && -f "$2" ]] || { echo tdiff: comparing uncompatible types ; exit 1 ; }
+[[ -d "$1" && -d "$2" ]] || { echo tdiff: both arguments must be directories ; exit 1 ; }
+[[ "$1" != "$2" ]] || { echo tdiff: comparing a directory to itself ; exit 1 ; }
 [[ "$mode" ]] && { [[ "$mode" == all || "$mode" == common || "$mode" = diff ]] || { echo "tdiff: valid modes: all|common|diff" ; exit 1 ; } ; }
 
 mode=${mode:-all} 
@@ -97,6 +100,6 @@ read tree_diff_diff_index
 				-e "tree_diff=$tree_diff" \
 				-e "tree_diff_diff_index=$tree_diff_diff_index"
 
-echo "tdiff: work directory: $(dirname $fd1)" 
+(( (!interactive) || option_og )) && echo "tdiff: generation directory: $(dirname $fd1)", diffs: $tree1 - $tree2 
 
 # vim: set ft=bash:

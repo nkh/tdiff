@@ -24,7 +24,8 @@
 | ---------- | ------------- | ------------------------------------------------ |
 | -g         |               | generate diff data and exit                      |
 | -m         | --mode        | modes: all|common|diff, default:all              |
-|            | --no-diff     | no file diff, when comparing lists               |
+|            | --no-diff     | no file diff, use when comparing lists           |
+|            | --og          | display generation directory                     |
 
 ## Bindings
 
@@ -45,6 +46,10 @@
 ## Compare 2 lists
 
 	tdiff <(echo -e 'abc\ndef\n123\n456') <(echo -e 'abc\ndef1\n1234\n456') 
+
+## Sort order
+
+	LC_COLLATE=C tdiff test1 test2
 
 # CONFIGURATION
 

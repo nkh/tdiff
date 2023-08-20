@@ -1,3 +1,5 @@
+handle
+	File test/dir2/TEST is a directory while file test/dir3/TEST is a regular empty file
 
 synch files and directories
 

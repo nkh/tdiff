@@ -125,7 +125,18 @@ delete()
 {
 # delete what's deleted on the other side
 # delete files with diff?
+# delete both?
 :
+
+entry="$(tail -n +$((top_line + 1)) "${e[$no_color_key]}" | head -n 1)"
+
+# if   [[ -f "${e[dir1]}/$entry" && -f "${e[dir2]}/$entry" ]] ; then lh=
+# elif [[ -f "${e[dir1]}/$entry" ]] ;                           then lh=
+# elif [[ -f "${e[dir2]}/$entry" ]] ;                           then lh=
+# else                                                              
+# fi
+
+lh=
 }
 
 update_status()
