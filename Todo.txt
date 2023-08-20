@@ -1,6 +1,4 @@
 
-config for viewers
-
 synch files and directories
 
 open ftl, which directory?
@@ -8,4 +6,6 @@ open ftl, which directory?
 diff options compatibility with -q
 	-b will not ignore the difference
 
+delete not deleted file
+	keep it colored differently
 

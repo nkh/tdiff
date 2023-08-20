@@ -4,12 +4,54 @@ DIR_EDIT=open_in_ftl
 
 open_in_ftl() { tmux new-window "ftl '$1/$3'" ; }
 
-bind custom tdiff		n		next_difference		"next difference"
-bind custom tdiff		N		previous_difference	"previous difference"
-bind paneless find		gff		diff_fzf		"fzf select"
-bind paneless find		b		diff_fzf		"fzf select"
+bind tdiff mode		m		next_mode		"next diff mode"
 
-bind custom tdiff		ENTER		open_diff		"open diff"
+bind tdiff find		n		next_difference		"next difference"
+bind tdiff find		N		previous_difference	"previous difference"
+bind tdiff find		gff		diff_fzf		"fzf select"
+bind tdiff find		b		diff_fzf		"fzf select"
+
+bind tdiff edit		ENTER		open_diff		"open diff"
+
+bind tdiff synch	synch		synch			"synch"
+bind tdiff synch	DELETE		delete			"synch"
+bind tdiff synch	tl		to_left			"Copy to left"
+bind tdiff synch	tr		to_right		"Copy to right"
+
+tdiff_setup()
+{
+mode=${e[mode]}
+
+generate_index_keys
+
+deleted_dir1=$(<"${e[only_d2]}" wc -l)
+deleted_dir2=$(<"${e[only_d1]}" wc -l)
+}
+
+generate_index_keys()
+{
+index_key="tree_${e[mode]}_diff_index"
+
+<"${e[$index_key]}" readarray -t diff_index
+< <(tac "${e[$index_key]}") readarray -t diff_index_reversed
+}
+
+tdiff_setup
+
+next_mode()
+{
+if   [[ "${e[mode]}" == all    ]] ; then e[mode]=common
+elif [[ "${e[mode]}" == common ]] ; then e[mode]=diff
+else [[ "${e[mode]}" == diff   ]] ; e[mode]=all
+fi
+
+[[ "${e[mode]}" == all    ]] && { tree1="${e[tree_all_d1]}"    ; tree2="${e[tree_all_d2]}"    ; }
+[[ "${e[mode]}" == common ]] && { tree1="${e[tree_common_d1]}" ; tree2="${e[tree_common_d2]}" ; }
+[[ "${e[mode]}" == diff   ]] && { tree1="${e[tree_diff]}"      ; tree2=                  ; }
+
+reload_input_streams $tree1 $tree2
+generate_index_keys
+}
 
 open_diff()
 {
@@ -26,13 +68,6 @@ echo -en '\e[?1049h\e[2J' ; stty -echo ; tput civis
 
 list
 }
-
-index_key="tree_${e[mode]}_diff_index"
-<"${e[$index_key]}" readarray -t diff_index
-< <(tac "${e[$index_key]}") readarray -t diff_index_reversed
-
-deleted_dir1=$(<"${e[only_d2]}" wc -l)
-deleted_dir2=$(<"${e[only_d1]}" wc -l)
 
 next_difference()
 {
@@ -65,13 +100,41 @@ echo -en '\e[?1049h' ; stty -echo ; tput civis
 list
 }
 
+synch()
+{
+# copy deleted file to other side
+# directory recursively?
+
+# change color, re-run diff?
+:
+
+
+}
+
+to_left()
+{
+:
+}
+
+to_right()
+{
+:
+}
+
+delete()
+{
+# delete what's deleted on the other side
+# delete files with diff?
+:
+}
+
 update_status()
 {
 no_color_key="tree_${e[mode]}_no_color"
 current_entry="..$(tail -n +$((top_line + 1)) ${e[$no_color_key]} | head -n 1)"
 
 status=$(cut -c1-$COLUMNS <<<"[-$deleted_dir1, -$deleted_dir2, !${#diff_index[@]}] $current_entry\e[m")
-echo -en "\e[$((bottom_line + 2));0H\e[K\e[38;5;240m$status\e[m"
+echo -en "\e[$((bottom_line + 2));1H\e[K\e[38;5;240m$status\e[m"
 }
 
 # vim: set ft=bash:

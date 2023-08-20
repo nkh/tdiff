@@ -75,10 +75,12 @@ read tree_diff_diff_index
 				-e "mode=$mode" \
 				-e "dir1=$1" \
 				-e "dir2=$2" \
+				-e "tree_all_d1=$tree_all_d1" \
+				-e "tree_all_d2=$tree_all_d2" \
 				-e "diff_files=$diff_files" \
 				-e "only_d1=$only_d1" \
 				-e "only_d2=$only_d2" \
-				-e "tree_all_color=$tree_all__color" \
+				-e "tree_all_color=$tree_all_color" \
 				-e "tree_all_no_color=$tree_all_no_color" \
 				-e "tree_all_d1_delete_index=$tree_all_d1_delete_index" \
 				-e "tree_all_d2_delete_index=$tree_all_d2_delete_index" \
