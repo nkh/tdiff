@@ -31,11 +31,16 @@
 
 | binding | function                       |
 | ------- | ------------------------------ |
+| m       | next mode                      |
 | n       | next diff                      |
 | N       | previous diff                  |
 | b       | fzf to diff                    |
 | gff     | fzf to diff                    |
 | ENTER   | open diff/file/directory       |
+
+Binding: *enter*
+
+It will open files in an editor, see ***CONFIG*** below, or a file manager.
 
 # EXAMPLES
 
@@ -52,6 +57,17 @@
 	LC_COLLATE=C tdiff test1 test2
 
 # CONFIGURATION
+
+At the top of the *tdiff.pless* file you will find these configuration variables
+
+```
+DIFF_TOOL=vimdiff
+FILE_EDIT=vim
+DIR_EDIT=open_in_ftl
+
+open_in_ftl() { tabs= ; for p in "$PWD/$1/$3" "$PWD/$2/$3" ; do [[ -e "$p" ]] && tabs+="$p$'\n'" ; done ; tmux new-window "ftl -t <(echo -n "$tabs")" ; }
+```
+They reflect my environment so you'll need to set them up if they don't match yours. You certainly will have to set your file manager.
 
 # DEPENDENCIES
 

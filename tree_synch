@@ -1,6 +1,13 @@
+#!/bin/bash
+
 fs="$(mktemp -u -p /tmp/$USER tree_diff_XXXXXX)" ;
 mkdir -p $fs # work directory
 :>$fs/diff_files
+
+spinner() { tput civis ; while true ; do echo -n . ; sleep .1 ; done ; }
+
+spinner >&2 &
+spinner_pid=$! ; disown $spinner_pid
 
 FIND1=${FIND1:-$TDF1} FIND1=${FIND1:-$TDF} FIND1=${FIND1:-find *}
 FIND2=${FIND2:-$TDF2} FIND2=${FIND2:-$TDF} FIND2=${FIND2:-find *}
@@ -47,6 +54,8 @@ cat $fs/diff_files | tree -n --fromfile -f -i --noreport >$fs/tree_diff_no_color
 
 wait
 perl $(dirname $0)/tag_tree.pl "$1-$2" "$DIFF" "" $fs/diff_files <(:) $fs/tree_diff_color >$fs/tree_diff 3>$fs/tree_diff_diff_index 4>/dev/null
+
+kill $spinner_pid  ; echo -en "\r" >&2
 
 printf "%s\n" \
 	$fs/fd1 \

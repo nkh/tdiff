@@ -1,3 +1,4 @@
+#!/bin/bash
 
 export DELETED=$'\e[38;5;252;48;5;52m' ; export DIFF=$'\e[38;5;252;48;5;25m' 
 export do_diff=1

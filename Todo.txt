@@ -1,9 +1,11 @@
-handle
-	File test/dir2/TEST is a directory while file test/dir3/TEST is a regular empty file
 
 synch files and directories
 
-open ftl, which directory?
+new mode
+	compare dir 2 to  dir 1
+		no coloring in dir  1
+		show new files in dir 2 instead for deleted in dir 1
+
 
 diff options compatibility with -q
 	-b will not ignore the difference
