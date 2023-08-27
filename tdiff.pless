@@ -15,10 +15,11 @@ bind tdiff find		b		diff_fzf		"fzf select"
 
 bind tdiff edit		ENTER		open_diff		"open diff"
 
-bind tdiff synch	s		synch			"synch"
-bind tdiff synch	dd		delete			"delete"
-bind tdiff synch	tl		to_left			"Copy to left"
-bind tdiff synch	tr		to_right		"Copy to right"
+bind tdiff synch	dd		delete			"delete both sides"
+bind tdiff synch	dl		delete_left		"delete left"
+bind tdiff synch	dr		delete_right		"delete rigt"
+bind tdiff synch	tl		synch_to_left		"synchronize to left"
+bind tdiff synch	tr		synch_to_right		"synchronize to right"
 
 declare -A deleted
 
@@ -34,24 +35,26 @@ deleted_dir2=$(<"${e[only_d1]}" wc -l)
 
 generate_index_keys()
 {
-index_key="tree_${e[mode]}_diff_index"
+index_file="${e[tree_${mode}_diff_index]}"
 
-<"${e[$index_key]}" readarray -t diff_index
-< <(tac "${e[$index_key]}") readarray -t diff_index_reversed
+<"$index_file"         readarray -t diff_index
+< <(tac "$index_file") readarray -t diff_index_reversed
 }
 
 tdiff_setup
 
 next_mode()
 {
-if   [[ "${e[mode]}" == all    ]] ; then e[mode]=common
-elif [[ "${e[mode]}" == common ]] ; then e[mode]=diff
-else [[ "${e[mode]}" == diff   ]] ; e[mode]=all
+if   [[ "${e[mode]}" == all         ]] ; then e[mode]=common
+elif [[ "${e[mode]}" == common      ]] ; then e[mode]=diff
+elif [[ "${e[mode]}" == diff        ]] ; then e[mode]=all_d2_only
+else [[ "${e[mode]}" == all_d2_only ]] ; e[mode]=all
 fi
 
-[[ "${e[mode]}" == all    ]] && { tree1="${e[tree_all_d1]}"    ; tree2="${e[tree_all_d2]}"    ; }
-[[ "${e[mode]}" == common ]] && { tree1="${e[tree_common_d1]}" ; tree2="${e[tree_common_d2]}" ; }
-[[ "${e[mode]}" == diff   ]] && { tree1="${e[tree_diff]}"      ; tree2=                  ; }
+[[ "${e[mode]}" == all         ]] && { tree1="${e[tree_all_d1]}"      ; tree2="${e[tree_all_d2]}"    ; }
+[[ "${e[mode]}" == common      ]] && { tree1="${e[tree_common_d1]}"   ; tree2="${e[tree_common_d2]}" ; }
+[[ "${e[mode]}" == diff        ]] && { tree1="${e[tree_diff]}"        ; tree2=                       ; }
+[[ "${e[mode]}" == all_d2_only ]] && { tree1="${e[tree_all_d2_only]}" ; tree2=                       ; }
 
 reload_input_streams $tree1 $tree2
 generate_index_keys
@@ -107,34 +110,14 @@ echo -en '\e[?1049h' ; stty -echo ; tput civis
 list
 }
 
-synch()
-{
-# copy deleted file to other side
-# directory recursively?
+synch_to_left() { : ; }
+synch_to_right() { : ; }
 
-# change color, re-run diff?
-:
-
-
-}
-
-to_left()
-{
-:
-}
-
-to_right()
-{
-:
-}
+delete_left() { : ; }
+delete_right() { : ; }
 
 delete()
 {
-# delete what's deleted on the other side
-# delete files with diff?
-# delete both?
-:
-
 entry="$(tail -n +$((top_line + 1)) "${e[$no_color_key]}" | head -n 1)"
 
 # if   [[ -f "${e[dir1]}/$entry" && -f "${e[dir2]}/$entry" ]] ; then lh=
@@ -145,13 +128,10 @@ entry="$(tail -n +$((top_line + 1)) "${e[$no_color_key]}" | head -n 1)"
 
 lh=
 
-{ prompt "delete '$entry' [y|N] ?" ; search_string="$REPLY" ; }
+{ prompt "delete '$entry' [y|N] ? " -sn1 ; search_string="$REPLY" ; }
+alt_screen
 
-# change color
-
-# deleted[$entry]=1
 deleted[$top_line]=1
-
 list
 }
 
@@ -160,7 +140,7 @@ update_status()
 no_color_key="tree_${e[mode]}_no_color"
 current_entry="..$(tail -n +$((top_line + 1)) ${e[$no_color_key]} | head -n 1)"
 
-status=$(cut -c1-$COLUMNS <<<"[-$deleted_dir1, -$deleted_dir2, !${#diff_index[@]}] $current_entry\e[m")
+status=$(cut -c1-$COLUMNS <<<"[${e[mode]}: -$deleted_dir1, -$deleted_dir2, !${#diff_index[@]}] $current_entry\e[m")
 echo -en "\e[$((bottom_line + 2));1H\e[K\e[38;5;240m$status\e[m"
 }
 
@@ -168,7 +148,7 @@ overlay_line()
 {
 (( ${deleted[$2]} )) &&
 	{
-	echo -en "\e[$1;0H\e[48;5;166;38;5;233m---\e[m"
+	echo -en "\e[$1;0H${lines[$2]}\r\e[48;5;166;38;5;233m \e[m"
 	return 0
 	}
 

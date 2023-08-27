@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export DELETED=$'\e[38;5;252;48;5;52m' ; export DIFF=$'\e[38;5;252;48;5;25m' 
+export DELETED=$'\e[38;5;252;48;5;52m' ; export DIFF=$'\e[38;5;252;48;5;25m'; export ONLY=$'\e[38;5;252;48;5;28m'
 export do_diff=1
 export TDDIFF
 interactive=1
@@ -27,7 +27,7 @@ while [[ $1 != -- ]]; do
 				echo
 				echo "OPTIONS"
 				echo "    --no-diff    no file diff"
-				echo "    --mode       all|common|diff"
+				echo "    --mode       all|common|diff|all_d2_only"
 				echo "    -g           generate only"
 				echo "    --og         display generation directory"
 				exit ;;
@@ -39,7 +39,8 @@ shift # -- in argument list to getopt
 
 [[ -d "$1" && -d "$2" ]] || { echo tdiff: both arguments must be directories ; exit 1 ; }
 [[ "$1" != "$2" ]] || { echo tdiff: comparing a directory to itself ; exit 1 ; }
-[[ "$mode" ]] && { [[ "$mode" == all || "$mode" == common || "$mode" = diff ]] || { echo "tdiff: valid modes: all|common|diff" ; exit 1 ; } ; }
+[[ "$mode" ]] && { [[ "$mode" == all || "$mode" == common || "$mode" = diff || "$mode" == all_d2_only ]] || \
+	{ echo "tdiff: valid modes: all|common|diff|all_d2_only" ; exit 1 ; } ; }
 
 mode=${mode:-all} 
 
@@ -49,13 +50,28 @@ read fd2
 read diff_files
 read only_d1
 read only_d2
+
 read tree_all_color
 read tree_all_no_color
+
 read tree_all_d1
 read tree_all_d1_delete_index
+
 read tree_all_d2
 read tree_all_d2_delete_index
+
 read tree_all_diff_index
+
+read tree_all_d1_only
+read tree_all_d1_only_no_color
+read tree_all_d1_only_delete_index
+read tree_all_d1_only_diff_index
+
+read tree_all_d2_only
+read tree_all_d2_only_no_color
+read tree_all_d2_only_delete_index
+read tree_all_d2_only_diff_index
+
 read tree_common_color 
 read tree_common_no_color 
 read tree_common_d1 
@@ -63,15 +79,17 @@ read tree_common_d1_delete_index
 read tree_common_d2 
 read tree_common_d2_delete_index
 read tree_common_diff_index
+
 read tree_diff_color 
 read tree_diff_no_color 
 read tree_diff 
 read tree_diff_diff_index
 } < <($(dirname $0)/tree_synch "$1" "$2")
 
-[[ "$mode" == all    ]] && { tree1="$tree_all_d1"    ; tree2="$tree_all_d2"    ; }
-[[ "$mode" == common ]] && { tree1="$tree_common_d1" ; tree2="$tree_common_d2" ; }
-[[ "$mode" == diff   ]] && { tree1="$tree_diff"      ; tree2=                  ; }
+[[ "$mode" == all         ]] && { tree1="$tree_all_d1"       ; tree2="$tree_all_d2"    ; }
+[[ "$mode" == common      ]] && { tree1="$tree_common_d1"    ; tree2="$tree_common_d2" ; }
+[[ "$mode" == diff        ]] && { tree1="$tree_diff"         ; tree2=                  ; }
+[[ "$mode" == all_d2_only ]] && { tree1="$tree_all_d2_only"  ; tree2=                  ; }
 
 ((interactive)) && paneless -a --no-color $tree1 $tree2 \
 			-c $(dirname $0)/tdiff.pless \
@@ -79,16 +97,29 @@ read tree_diff_diff_index
 				-e "mode=$mode" \
 				-e "dir1=$1" \
 				-e "dir2=$2" \
+				\
 				-e "tree_all_d1=$tree_all_d1" \
 				-e "tree_all_d2=$tree_all_d2" \
 				-e "diff_files=$diff_files" \
 				-e "only_d1=$only_d1" \
 				-e "only_d2=$only_d2" \
+				\
 				-e "tree_all_color=$tree_all_color" \
 				-e "tree_all_no_color=$tree_all_no_color" \
 				-e "tree_all_d1_delete_index=$tree_all_d1_delete_index" \
 				-e "tree_all_d2_delete_index=$tree_all_d2_delete_index" \
 				-e "tree_all_diff_index=$tree_all_diff_index" \
+				\
+				-e "tree_all_d1_only=$tree_all_d1_only" \
+				-e "tree_all_d1_only_no_color=$tree_all_d1_only_no_color" \
+				-e "tree_all_d1_only_delete_index=$tree_all_d1_only_delete_index" \
+				-e "tree_all_d1_only_diff_index=$tree_all_d1_only_diff_index" \
+				\
+				-e "tree_all_d2_only=$tree_all_d2_only" \
+				-e "tree_all_d2_only_no_color=$tree_all_d2_only_no_color" \
+				-e "tree_all_d2_only_delete_index=$tree_all_d2_only_delete_index" \
+				-e "tree_all_d2_only_diff_index=$tree_all_d2_only_diff_index" \
+				\
 				-e "tree_common_color=$tree_common_color" \
 				-e "tree_common_no_color=$tree_common_no_color" \
 				-e "tree_common_d1=$tree_common_d1" \
@@ -96,6 +127,7 @@ read tree_diff_diff_index
 				-e "tree_common_d2=$tree_common_d2" \
 				-e "tree_common_d2_delete_index=$tree_common_d2_delete_index" \
 				-e "tree_common_diff_index=$tree_common_diff_index" \
+				\
 				-e "tree_diff_color=$tree_diff_color" \
 				-e "tree_diff_no_color=$tree_diff_no_color" \
 				-e "tree_diff=$tree_diff" \

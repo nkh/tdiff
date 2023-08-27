@@ -12,11 +12,31 @@
 
 ***tdiff*** diffs two directories and presents the diff as a tree with different and deleted files highlighted.
 
-| mode   | operation                                            |
-| ------ | ---------------------------------------------------- |
-| all    | show all the files in the directories                |
-| common | show all the files that are different or deleted     |
-| diff   | show a single tree with the files that are different |
+I wrote *tdiff* because I couldn't find an equivalent application.
+
+*tdiff* is not, yet, a fully functional diff TUI application but it can
+
+- diff and display two trees with highlighted differences in a terminal,
+- display the diff in different modes
+- jump from to files that have changed
+- open different files in vimdiff (configurable)
+- open files in vim (configurable)
+- open directories in a file manager (configurable)
+
+It can't, but will given time or patches:
+
+- synchronize files or directories
+- delete files or directories
+- update the diff view if something has changed
+
+## Modes
+
+| mode        | operation                                            |
+| ----------- | ---------------------------------------------------- |
+| all         | show all the files in the directories                |
+| common      | show all the files that are different or deleted     |
+| diff        | show a single tree with the files that are different |
+| all_d2_only | show a single tree for directory 2                   |
 
 ## Options
 
@@ -28,6 +48,10 @@
 |            | --og          | display generation directory                     |
 
 ## Bindings
+
+See ***Paneless*** for default bindings https://github.com/nkh/paneless
+
+### Tdiff extra bindings
 
 | binding | function                       |
 | ------- | ------------------------------ |
@@ -76,6 +100,7 @@ They reflect my environment so you'll need to set them up if they don't match yo
 - Awk
 - tree
 - diff
+- FZF
 - Paneless https://github.com/nkh/paneless
 
 # INSTALL

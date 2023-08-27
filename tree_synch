@@ -33,28 +33,37 @@ wait
 cat $fs/diff_d* $fs/fd1 $fs/fd2 | tree -C --fromfile -f --noreport >$fs/tree_all_color
 cat $fs/diff_d* $fs/fd1 $fs/fd2 | tree -n --fromfile -f -i --noreport >$fs/tree_all_no_color
 
-perl $(dirname $0)/tag_tree.pl "$1" "$DIFF" "$DELETED" $fs/diff_files <(cat $fs/diff_d1 $fs/only_d2) $fs/tree_all_color \
+perl $(dirname $0)/tag_tree.pl "$1" "$DIFF" $fs/diff_files "$DELETED" <(cat $fs/diff_d1 $fs/only_d2) "" <(:) $fs/tree_all_color \
 	>$fs/tree_all_d1 3>$fs/tree_all_diff_index 4>$fs/tree_all_d1_delete_index &
 
-perl $(dirname $0)/tag_tree.pl "$2" "$DIFF" "$DELETED" $fs/diff_files <(cat $fs/diff_d2 $fs/only_d1) $fs/tree_all_color \
+perl $(dirname $0)/tag_tree.pl "$2" "$DIFF" $fs/diff_files "$DELETED" <(cat $fs/diff_d2 $fs/only_d1) "" <(:) $fs/tree_all_color \
 	>$fs/tree_all_d2 3>/dev/null 4>$fs/tree_all_d2_delete_index &
 
 cat $fs/diff_d* $fs/only_d1 $fs/only_d2 $fs/diff_files | tree -C --fromfile -f --noreport >$fs/tree_common_color
 cat $fs/diff_d* $fs/only_d1 $fs/only_d2 $fs/diff_files | tree -n --fromfile -f -i --noreport >$fs/tree_common_no_color
 
 wait
-perl $(dirname $0)/tag_tree.pl "$1" "$DIFF" "$DELETED" $fs/diff_files <(cat $fs/diff_d1 $fs/only_d2) $fs/tree_common_color \
+perl $(dirname $0)/tag_tree.pl "$1" "$DIFF" $fs/diff_files "$DELETED" <(cat $fs/diff_d1 $fs/only_d2) "" <(:) $fs/tree_common_color \
 	>$fs/tree_common_d1 3>$fs/tree_common_diff_index 4>$fs/tree_common_d1_delete_index &
 
-perl $(dirname $0)/tag_tree.pl "$2" "$DIFF" "$DELETED" $fs/diff_files <(cat $fs/diff_d2 $fs/only_d1) $fs/tree_common_color \
+perl $(dirname $0)/tag_tree.pl "$2" "$DIFF" $fs/diff_files "$DELETED" <(cat $fs/diff_d2 $fs/only_d1) "" <(:) $fs/tree_common_color \
 	>$fs/tree_common_d2 3>/dev/null 4>$fs/tree_common_d2_delete_index &
 
 cat $fs/diff_files | tree -C --fromfile -f --noreport >$fs/tree_diff_color
 cat $fs/diff_files | tree -n --fromfile -f -i --noreport >$fs/tree_diff_no_color
 
 wait
-perl $(dirname $0)/tag_tree.pl "$1-$2" "$DIFF" "" $fs/diff_files <(:) $fs/tree_diff_color >$fs/tree_diff 3>$fs/tree_diff_diff_index 4>/dev/null
+perl $(dirname $0)/tag_tree.pl "$1-$2" "$DIFF" $fs/diff_files "" <(:) "" <(:) $fs/tree_diff_color \
+	>$fs/tree_diff 3>$fs/tree_diff_diff_index 4>/dev/null &
 
+# these could be generated earlier, here to "balance" parallelization
+perl $(dirname $0)/tag_tree.pl "$2" "$DIFF" $fs/diff_files "$DELETED" <(cat $fs/diff_d1 $fs/only_d2) "$ONLY" $fs/only_d1 $fs/tree_all_color \
+	>$fs/tree_all_d1_only 3>$fs/tree_all_d1_only_diff_index 4>$fs/tree_all_d1_only_delete_index &
+
+perl $(dirname $0)/tag_tree.pl "$2" "$DIFF" $fs/diff_files "$DELETED" <(cat $fs/diff_d2 $fs/only_d1) "$ONLY" $fs/only_d2 $fs/tree_all_color \
+	>$fs/tree_all_d2_only 3>$fs/tree_all_d2_only_diff_index 4>$fs/tree_all_d2_only_delete_index &
+
+wait
 kill $spinner_pid  ; echo -en "\r" >&2
 
 printf "%s\n" \
@@ -65,11 +74,25 @@ printf "%s\n" \
 	$fs/only_d2 \
 	$fs/tree_all_color \
 	$fs/tree_all_no_color \
+	\
 	$fs/tree_all_d1 \
 	$fs/tree_all_d1_delete_index \
+	\
 	$fs/tree_all_d2 \
 	$fs/tree_all_d2_delete_index \
+	\
 	$fs/tree_all_diff_index \
+	\
+	$fs/tree_all_d1_only \
+	$fs/tree_all_no_color \
+	$fs/tree_all_d1_only_delete_index \
+	$fs/tree_all_diff_index \
+	\
+	$fs/tree_all_d2_only \
+	$fs/tree_all_no_color \
+	$fs/tree_all_d2_only_delete_index \
+	$fs/tree_all_diff_index \
+	\
 	$fs/tree_common_color \
 	$fs/tree_common_no_color \
 	$fs/tree_common_d1 \
@@ -77,6 +100,7 @@ printf "%s\n" \
 	$fs/tree_common_d2 \
 	$fs/tree_common_d2_delete_index \
 	$fs/tree_common_diff_index \
+	\
 	$fs/tree_diff_color \
 	$fs/tree_diff_no_color \
 	$fs/tree_diff \

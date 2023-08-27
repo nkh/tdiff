@@ -1,15 +1,32 @@
 
 synch files and directories
 
+parallel diff
+	find n non overlapping largest directories
+	diff n directories &
+	diff -exclude n directories
+
+	n directories not necessarily at root of dirs to diff
+
+	n directories not necessarily same in directory structure
+		can't compare to nothing
+			but also means that everything under is automatically in the diff
+			those are found by diffing the files list not running diff
+
 new mode
 	compare dir 2 to  dir 1
 		no coloring in dir  1
 		show new files in dir 2 instead for deleted in dir 1
 
+	remove dir 1
+		no color and no added information
+		
+	it's just added file to dir2 that need to be colored accordingly
+
 
 diff options compatibility with -q
 	-b will not ignore the difference
 
-delete not deleted file
-	keep it colored differently
+delete
+	not deleted file -> colored differently
 
