@@ -6,7 +6,8 @@ DIR_EDIT=open_in_ftl
 
 open_in_ftl() { tabs= ; for p in "$PWD/$1/$3" "$PWD/$2/$3" ; do [[ -e "$p" ]] && tabs+="$p$'\n'" ; done ; tmux new-window "ftl -t <(echo -n "$tabs")" ; }
 
-bind tdiff mode		m		next_mode		"next diff mode"
+bind tdiff mode		m		next_mode		"next view mode"
+bind tdiff mode		M		previous_mode		"previous view mode"
 
 bind tdiff find		n		next_difference		"next difference"
 bind tdiff find		N		previous_difference	"previous difference"
@@ -43,6 +44,17 @@ index_file="${e[tree_${mode}_diff_index]}"
 
 tdiff_setup
 
+previous_mode()
+{
+if   [[ "${e[mode]}" == all         ]] ; then e[mode]=all_d2_only
+elif [[ "${e[mode]}" == common      ]] ; then e[mode]=all
+elif [[ "${e[mode]}" == diff        ]] ; then e[mode]=common
+else [[ "${e[mode]}" == all_d2_only ]] ; e[mode]=diff
+fi
+
+apply_mode
+}
+
 next_mode()
 {
 if   [[ "${e[mode]}" == all         ]] ; then e[mode]=common
@@ -51,6 +63,11 @@ elif [[ "${e[mode]}" == diff        ]] ; then e[mode]=all_d2_only
 else [[ "${e[mode]}" == all_d2_only ]] ; e[mode]=all
 fi
 
+apply_mode
+}
+
+apply_mode()
+{
 [[ "${e[mode]}" == all         ]] && { tree1="${e[tree_all_d1]}"      ; tree2="${e[tree_all_d2]}"    ; }
 [[ "${e[mode]}" == common      ]] && { tree1="${e[tree_common_d1]}"   ; tree2="${e[tree_common_d2]}" ; }
 [[ "${e[mode]}" == diff        ]] && { tree1="${e[tree_diff]}"        ; tree2=                       ; }
@@ -132,6 +149,7 @@ lh=
 alt_screen
 
 deleted[$top_line]=1
+
 list
 }
 
