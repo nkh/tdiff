@@ -22,7 +22,8 @@ wait
 awk 'NR==FNR { a[$0]; next } !($0 in a)' $fs/fd2 $fs/fd1 >$fs/only_d1 &
 awk 'NR==FNR { a[$0]; next } !($0 in a)' $fs/fd1 $fs/fd2 >$fs/only_d2 &
 
-((do_diff)) && [[ "$1" && "$2" ]] && diff $TDDIFF -r -q "$1" "$2" | rg File >$fs/the_diff &
+: ${TDD:=diff -rq} 
+((do_diff)) && [[ "$1" && "$2" ]] && $TDD "$1" "$2" | rg File >$fs/the_diff &
 
 wait
 <$fs/the_diff perl -ne 's/^Files (.+) and .+/$1/ and print' | sed 's#'"$1"'/##' >$fs/diff_files &
@@ -64,7 +65,7 @@ perl $(dirname $0)/tag_tree.pl "$2" "$DIFF" $fs/diff_files "$DELETED" <(cat $fs/
 	>$fs/tree_all_d2_only 3>$fs/tree_all_d2_only_diff_index 4>$fs/tree_all_d2_only_delete_index &
 
 wait
-kill $spinner_pid  ; echo -en "\r" >&2
+kill $spinner_pid  ; tput cnorm ; echo -en "\r" >&2
 
 printf "%s\n" \
 	$fs/fd1 \

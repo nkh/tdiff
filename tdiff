@@ -2,7 +2,7 @@
 
 export DELETED=$'\e[38;5;252;48;5;52m' ; export DIFF=$'\e[38;5;252;48;5;25m'; export ONLY=$'\e[38;5;252;48;5;28m'
 export do_diff=1
-export TDDIFF
+export TDD 
 interactive=1
 
 # Parse options
@@ -38,12 +38,11 @@ done
 shift # -- in argument list to getopt
 
 [[ -d "$1" && -d "$2" ]] || { echo tdiff: both arguments must be directories ; exit 1 ; }
-[[ "$1" != "$2" ]] || { echo tdiff: comparing a directory to itself ; exit 1 ; }
-[[ "$mode" ]] && { [[ "$mode" == all || "$mode" == common || "$mode" = diff || "$mode" == all_d2_only ]] || \
-	{ echo "tdiff: valid modes: all|common|diff|all_d2_only" ; exit 1 ; } ; }
+[[ "$1" != "$2" ]]       || { echo tdiff: comparing a directory to itself ; exit 1 ; }
+[[ "$mode" ]]            && { [[ "$mode" == all || "$mode" == common || "$mode" = diff || "$mode" == all_d2_only ]] ||
+				{ echo "tdiff: valid modes: all|common|diff|all_d2_only" ; exit 1 ; } ; }
 
 mode=${mode:-all} 
-
 {
 read fd1
 read fd2
