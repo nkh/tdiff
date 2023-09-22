@@ -1,5 +1,7 @@
 #!/bin/bash
 
+[[ -n "$1" && -n "$2" && -n "$3" ]] || { echo "$1 - $2 - $3 - tree_synch: error: two entries and a mode needed." >&2 ; exit 1 ; }
+
 fs="$(mktemp -u -p /tmp/$USER tree_diff_XXXXXX)" ;
 mkdir -p $fs # work directory
 :>$fs/diff_files
@@ -23,16 +25,18 @@ awk 'NR==FNR { a[$0]; next } !($0 in a)' $fs/fd2 $fs/fd1 >$fs/only_d1 &
 awk 'NR==FNR { a[$0]; next } !($0 in a)' $fs/fd1 $fs/fd2 >$fs/only_d2 &
 
 : ${TDD:=diff -rq} 
-((do_diff)) && [[ "$1" && "$2" ]] && $TDD "$1" "$2" | rg File >$fs/the_diff &
+$TDD "$1" "$2" | rg File >$fs/the_diff &
 
 wait
-<$fs/the_diff perl -ne 's/^Files (.+) and .+/$1/ and print' | sed 's#'"$1"'/##' >$fs/diff_files &
-<$fs/the_diff perl -ne 's/^File (.*?\/)?(.+?) is a .*file while .+/$1$2 <!>/ and print' | sed 's#'"$1"'/##' >$fs/diff_d2 &
+<$fs/the_diff perl -ne 's/^Files (.+) and .+/$1/ and print'                                | sed 's#'"$1"'/##' >$fs/diff_files &
+<$fs/the_diff perl -ne 's/^Files (.+) and .+/$1/ and print'                                | sed 's#'"$1"'/##' >$fs/diff_files &
+<$fs/the_diff perl -ne 's/^File (.*?\/)?(.+?) is a .*file while .+/$1$2 <!>/ and print'    | sed 's#'"$1"'/##' >$fs/diff_d2 &
 <$fs/the_diff perl -ne 's/^File (.*?\/)?(.+?) is a directory while .+/$1$2 <!>/ and print' | sed 's#'"$1"'/##' >$fs/diff_d1 &
 
 wait
 cat $fs/diff_d* $fs/fd1 $fs/fd2 | tree -C --fromfile -f --noreport >$fs/tree_all_color
 cat $fs/diff_d* $fs/fd1 $fs/fd2 | tree -n --fromfile -f -i --noreport >$fs/tree_all_no_color
+
 
 perl $(dirname $0)/tag_tree.pl "$1" "$DIFF" $fs/diff_files "$DELETED" <(cat $fs/diff_d1 $fs/only_d2) "" <(:) $fs/tree_all_color \
 	>$fs/tree_all_d1 3>$fs/tree_all_diff_index 4>$fs/tree_all_d1_delete_index &
@@ -54,6 +58,10 @@ cat $fs/diff_files | tree -C --fromfile -f --noreport >$fs/tree_diff_color
 cat $fs/diff_files | tree -n --fromfile -f -i --noreport >$fs/tree_diff_no_color
 
 wait
+<$fs/tree_all_color    sed -e 's/\x1B\[[0-9;]\{1,\}[A-Za-z]//g' -e 's/^\(.\).*/\1/' >$fs/tree_all_glyph &
+<$fs/tree_common_color sed -e 's/\x1B\[[0-9;]\{1,\}[A-Za-z]//g' -e 's/^\(.\).*/\1/' >$fs/tree_common_glyph &
+<$fs/tree_diff_color   sed -e 's/\x1B\[[0-9;]\{1,\}[A-Za-z]//g' -e 's/^\(.\).*/\1/' >$fs/tree_diff_glyph &
+
 perl $(dirname $0)/tag_tree.pl "$1-$2" "$DIFF" $fs/diff_files "" <(:) "" <(:) $fs/tree_diff_color \
 	>$fs/tree_diff 3>$fs/tree_diff_diff_index 4>/dev/null &
 
@@ -65,47 +73,62 @@ perl $(dirname $0)/tag_tree.pl "$2" "$DIFF" $fs/diff_files "$DELETED" <(cat $fs/
 	>$fs/tree_all_d2_only 3>$fs/tree_all_d2_only_diff_index 4>$fs/tree_all_d2_only_delete_index &
 
 wait
-kill $spinner_pid  ; tput cnorm ; echo -en "\r" >&2
+cp $fs/tree_all_glyph $fs/tree_all_d2_only_glyph 
 
-printf "%s\n" \
-	$fs/fd1 \
-	$fs/fd2 \
-	$fs/diff_files \
-	$fs/only_d1 \
-	$fs/only_d2 \
-	$fs/tree_all_color \
-	$fs/tree_all_no_color \
-	\
-	$fs/tree_all_d1 \
-	$fs/tree_all_d1_delete_index \
-	\
-	$fs/tree_all_d2 \
-	$fs/tree_all_d2_delete_index \
-	\
-	$fs/tree_all_diff_index \
-	\
-	$fs/tree_all_d1_only \
-	$fs/tree_all_no_color \
-	$fs/tree_all_d1_only_delete_index \
-	$fs/tree_all_diff_index \
-	\
-	$fs/tree_all_d2_only \
-	$fs/tree_all_no_color \
-	$fs/tree_all_d2_only_delete_index \
-	$fs/tree_all_diff_index \
-	\
-	$fs/tree_common_color \
-	$fs/tree_common_no_color \
-	$fs/tree_common_d1 \
-	$fs/tree_common_d1_delete_index \
-	$fs/tree_common_d2 \
-	$fs/tree_common_d2_delete_index \
-	$fs/tree_common_diff_index \
-	\
-	$fs/tree_diff_color \
-	$fs/tree_diff_no_color \
-	$fs/tree_diff \
-	$fs/tree_diff_diff_index 
+kill $spinner_pid  ; tput cnorm >&2 ; echo -en "\r" >&2
+
+mode="$3"
+[[ "$mode" == all         ]] && { tree1="$fs/tree_all_d1"       ; tree2="$fs/tree_all_d2"    ; }
+[[ "$mode" == common      ]] && { tree1="$fs/tree_common_d1"    ; tree2="$fs/tree_common_d2" ; }
+[[ "$mode" == diff        ]] && { tree1="$fs/tree_diff"         ; tree2=                     ; }
+[[ "$mode" == all_d2_only ]] && { tree1="$fs/tree_all_d2_only"  ; tree2=                     ; }
+
+declare -A e=(
+	[mode]=$mode
+	[dir1]="$1"
+	[dir2]="$2"
+	[fd1]="$fs/fd1"
+	[fd2]="$fs/fd2"
+	[diff_files]="$fs/diff_files"
+	[only_d1]="$fs/only_d1"
+	[only_d2]="$fs/only_d2"
+	[tree_all_color]="$fs/tree_all_color"
+	[tree_all_no_color]="$fs/tree_all_no_color"
+	[tree_all_glyph]="$fs/tree_all_glyph"
+	[tree_all_d1]="$fs/tree_all_d1"
+	[tree_all_d1_delete_index]="$fs/tree_all_d1_delete_index"
+	[tree_all_d2]="$fs/tree_all_d2"
+	[tree_all_d2_delete_index]="$fs/tree_all_d2_delete_index"
+	[tree_all_diff_index]="$fs/tree_all_diff_index"
+	[tree_all_d1_only]="$fs/tree_all_d1_only"
+	[tree_all_d1_only_no_color]="$fs/tree_all_no_color"
+	[tree_all_d1_only_delete_index]="$fs/tree_all_d1_only_delete_index"
+	[tree_all_d1_only_diff_index]="$fs/tree_all_diff_index"
+	[tree_all_d2_only]="$fs/tree_all_d2_only"
+	[tree_all_d2_only_glyph]="$fs/tree_all_d2_only_glyph"
+	[tree_all_d2_only_no_color]="$fs/tree_all_no_color"
+	[tree_all_d2_only_delete_index]="$fs/tree_all_d2_only_delete_index"
+	[tree_all_d2_only_diff_index]="$fs/tree_all_diff_index"
+	[tree_common_color]="$fs/tree_common_color"
+	[tree_common_glyph]="$fs/tree_common_glyph"
+	[tree_common_no_color]="$fs/tree_common_no_color"
+	[tree_common_d1]="$fs/tree_common_d1"
+	[tree_common_d1_delete_index]="$fs/tree_common_d1_delete_index"
+	[tree_common_d2]="$fs/tree_common_d2"
+	[tree_common_d2_delete_index]="$fs/tree_common_d2_delete_index"
+	[tree_common_diff_index]="$fs/tree_common_diff_index"
+	[tree_diff_color]="$fs/tree_diff_color"
+	[tree_diff_glyph]="$fs/tree_diff_glyph"
+	[tree_diff_no_color]="$fs/tree_diff_no_color"
+	[tree_diff]="$fs/tree_diff"
+	[tree_diff_diff_index]="$fs/tree_diff_diff_index"
+	)
+
+declare -p e >$fs/tree_synch_manifest 2>/dev/null
+
+echo "$tree1"
+echo "$tree2"
+echo "$fs/tree_synch_manifest"
 
 # vim: set ft=bash:
 

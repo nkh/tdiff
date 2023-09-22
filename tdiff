@@ -8,15 +8,14 @@ interactive=1
 # Parse options
 [[ "$1" ]]  || { echo "paneless: need at least one input" ; exit 1 ; }
 
-options=$(getopt -o g,h,m: -l help,no-diff,mode:,og -n "$0" -- "$@") || exit
+options=$(getopt -o g,h,m:,M -l help,mode: -n "$0" -- "$@") || exit
 eval set -- "$options"
 
 while [[ $1 != -- ]]; do
 	case $1 in
-		--no-diff       ) do_diff=      ; shift   ;;
-		-m|--mode       ) mode=$2       ; shift 2 ;;
-		-g              ) interactive=0 ; shift   ;;
-		--og            ) option_og=1   ; shift   ;;
+		-m|--mode       ) mode=$1                       ; shift 2 ;;
+		-g              ) show_manifest=1 interactive=0 ; shift   ;;
+		-M              ) show_manifest=1               ; shift   ;;
 		-h|--help       )
 				echo "NAME"
 				echo "    tdiff - tree diff visualization"
@@ -26,10 +25,9 @@ while [[ $1 != -- ]]; do
 				echo "    tdiff file <(...)"
 				echo
 				echo "OPTIONS"
-				echo "    --no-diff    no file diff"
 				echo "    --mode       all|common|diff|all_d2_only"
-				echo "    -g           generate only"
-				echo "    --og         display generation directory"
+				echo "    -g           only generate manifest"
+				echo "    -M           display manifest location"
 				exit ;;
 		*               ) echo "tdiff: bad option: $1" >&2; exit 1;;
 	esac
@@ -37,101 +35,18 @@ done
 
 shift # -- in argument list to getopt
 
-[[ -d "$1" && -d "$2" ]] || { echo tdiff: both arguments must be directories ; exit 1 ; }
-[[ "$1" != "$2" ]]       || { echo tdiff: comparing a directory to itself ; exit 1 ; }
-[[ "$mode" ]]            && { [[ "$mode" == all || "$mode" == common || "$mode" = diff || "$mode" == all_d2_only ]] ||
-				{ echo "tdiff: valid modes: all|common|diff|all_d2_only" ; exit 1 ; } ; }
+[[ "$1" != "$2" ]] || { echo tdiff: comparing to oneself ; exit 1 ; }
 
-mode=${mode:-all} 
-{
-read fd1
-read fd2
-read diff_files
-read only_d1
-read only_d2
+{ [[ -d "$1" && -d "$2" ]] ||  [[ -f "$1" && -f "$2" ]] ; } ||
+	{ echo tdiff: entries to compare are not of the same type ; exit 1 ; }
 
-read tree_all_color
-read tree_all_no_color
+: ${mode:=all} 
+[[ "$mode" == all || "$mode" == common || "$mode" = diff || "$mode" == all_d2_only ]] ||
+	{ echo "tdiff: valid modes: all|common|diff|all_d2_only" ; exit 1 ; }
 
-read tree_all_d1
-read tree_all_d1_delete_index
+{ read tree1 ; read tree2 ; read manifest ; } < <($(dirname $0)/tree_synch "$1" "$2" "$mode") || exit
 
-read tree_all_d2
-read tree_all_d2_delete_index
-
-read tree_all_diff_index
-
-read tree_all_d1_only
-read tree_all_d1_only_no_color
-read tree_all_d1_only_delete_index
-read tree_all_d1_only_diff_index
-
-read tree_all_d2_only
-read tree_all_d2_only_no_color
-read tree_all_d2_only_delete_index
-read tree_all_d2_only_diff_index
-
-read tree_common_color 
-read tree_common_no_color 
-read tree_common_d1 
-read tree_common_d1_delete_index
-read tree_common_d2 
-read tree_common_d2_delete_index
-read tree_common_diff_index
-
-read tree_diff_color 
-read tree_diff_no_color 
-read tree_diff 
-read tree_diff_diff_index
-} < <($(dirname $0)/tree_synch "$1" "$2")
-
-[[ "$mode" == all         ]] && { tree1="$tree_all_d1"       ; tree2="$tree_all_d2"    ; }
-[[ "$mode" == common      ]] && { tree1="$tree_common_d1"    ; tree2="$tree_common_d2" ; }
-[[ "$mode" == diff        ]] && { tree1="$tree_diff"         ; tree2=                  ; }
-[[ "$mode" == all_d2_only ]] && { tree1="$tree_all_d2_only"  ; tree2=                  ; }
-
-((interactive)) && paneless -a --no-color $tree1 $tree2 \
-			-c $(dirname $0)/tdiff.pless \
-			--status-line \
-				-e "mode=$mode" \
-				-e "dir1=$1" \
-				-e "dir2=$2" \
-				\
-				-e "tree_all_d1=$tree_all_d1" \
-				-e "tree_all_d2=$tree_all_d2" \
-				-e "diff_files=$diff_files" \
-				-e "only_d1=$only_d1" \
-				-e "only_d2=$only_d2" \
-				\
-				-e "tree_all_color=$tree_all_color" \
-				-e "tree_all_no_color=$tree_all_no_color" \
-				-e "tree_all_d1_delete_index=$tree_all_d1_delete_index" \
-				-e "tree_all_d2_delete_index=$tree_all_d2_delete_index" \
-				-e "tree_all_diff_index=$tree_all_diff_index" \
-				\
-				-e "tree_all_d1_only=$tree_all_d1_only" \
-				-e "tree_all_d1_only_no_color=$tree_all_d1_only_no_color" \
-				-e "tree_all_d1_only_delete_index=$tree_all_d1_only_delete_index" \
-				-e "tree_all_d1_only_diff_index=$tree_all_d1_only_diff_index" \
-				\
-				-e "tree_all_d2_only=$tree_all_d2_only" \
-				-e "tree_all_d2_only_no_color=$tree_all_d2_only_no_color" \
-				-e "tree_all_d2_only_delete_index=$tree_all_d2_only_delete_index" \
-				-e "tree_all_d2_only_diff_index=$tree_all_d2_only_diff_index" \
-				\
-				-e "tree_common_color=$tree_common_color" \
-				-e "tree_common_no_color=$tree_common_no_color" \
-				-e "tree_common_d1=$tree_common_d1" \
-				-e "tree_common_d1_delete_index=$tree_common_d1_delete_index" \
-				-e "tree_common_d2=$tree_common_d2" \
-				-e "tree_common_d2_delete_index=$tree_common_d2_delete_index" \
-				-e "tree_common_diff_index=$tree_common_diff_index" \
-				\
-				-e "tree_diff_color=$tree_diff_color" \
-				-e "tree_diff_no_color=$tree_diff_no_color" \
-				-e "tree_diff=$tree_diff" \
-				-e "tree_diff_diff_index=$tree_diff_diff_index"
-
-(( (!interactive) || option_og )) && echo "tdiff: generation directory: $(dirname $fd1)", diffs: $tree1 - $tree2 
+(( interactive ))   && paneless -a --no-color -c $(dirname $0)/tdiff.pless --status-line -E "$manifest" $tree1 $tree2 
+(( show_manifest )) && echo "tdiff: manifest: $manifest" 
 
 # vim: set ft=bash:

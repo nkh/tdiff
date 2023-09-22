@@ -1,6 +1,27 @@
-
 synch files and directories
+	update
+		directory?
+			need to go to all files to verify
+		file, easy to check
 
-delete
-	not deleted file -> colored differently
+	delete
+		directory/file
+			mark and grey
+		
+	copy
+		directory/file
+			show direction
+			grey old
+
+	greying
+		overlay
+
+git diff previous version
+	example script
+	show file diff preview
+
+ftl integrate tree diff
+
+tdiff -g show summary of changes
+
 

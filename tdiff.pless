@@ -1,10 +1,17 @@
 #!/bin/bash
 
+COPIED="\e[48;5;74;38;5;233m"
+DELETED="\e[48;5;132;38;5;233m "
+SYNCHED="\e[48;5;71;38;5;233m "
+
 DIFF_TOOL=vimdiff
 FILE_EDIT=vim
-DIR_EDIT=open_in_ftl
 
+DIR_EDIT=open_in_ftl
 open_in_ftl() { tabs= ; for p in "$PWD/$1/$3" "$PWD/$2/$3" ; do [[ -e "$p" ]] && tabs+="$p$'\n'" ; done ; tmux new-window "ftl -t <(echo -n "$tabs")" ; }
+
+declare -A modified1 modified2
+glyphs=()
 
 bind tdiff mode		m		next_mode		"next view mode"
 bind tdiff mode		M		previous_mode		"previous view mode"
@@ -16,18 +23,15 @@ bind tdiff find		b		diff_fzf		"fzf select"
 
 bind tdiff edit		ENTER		open_diff		"open diff"
 
-bind tdiff synch	dd		delete			"delete both sides"
-bind tdiff synch	dl		delete_left		"delete left"
-bind tdiff synch	dr		delete_right		"delete rigt"
-bind tdiff synch	tl		synch_to_left		"synchronize to left"
-bind tdiff synch	tr		synch_to_right		"synchronize to right"
+bind tdiff delete	dd		delete			"delete both sides"
+bind tdiff delete	dl		delete_left		"delete left"
+bind tdiff delete	dr		delete_right		"delete right"
 
-declare -A deleted
+bind tdiff synch	tl		copy_to_left		"copy to left"
+bind tdiff synch	tr		copy_to_right		"copy to right"
 
 tdiff_setup()
 {
-mode=${e[mode]}
-
 generate_index_keys
 
 deleted_dir1=$(<"${e[only_d2]}" wc -l)
@@ -36,7 +40,7 @@ deleted_dir2=$(<"${e[only_d1]}" wc -l)
 
 generate_index_keys()
 {
-index_file="${e[tree_${mode}_diff_index]}"
+index_file="${e[tree_${e[mode]}_diff_index]}"
 
 <"$index_file"         readarray -t diff_index
 < <(tac "$index_file") readarray -t diff_index_reversed
@@ -74,26 +78,8 @@ apply_mode()
 [[ "${e[mode]}" == all_d2_only ]] && { tree1="${e[tree_all_d2_only]}" ; tree2=                       ; }
 
 reload_input_streams $tree1 $tree2
+glyphs=()
 generate_index_keys
-}
-
-open_diff()
-{
-no_color_key="tree_${e[mode]}_no_color"
-entry="$(tail -n +$((top_line + 1)) "${e[$no_color_key]}" | head -n 1)"
-
-entry="${entry#./}" ;
-entry="${entry% <!>}" ;
-
-if   [[ -f "${e[dir1]}/$entry" && -f "${e[dir2]}/$entry" ]] ; then $DIFF_TOOL "${e[dir1]}/$entry" "${e[dir2]}/$entry"
-elif [[ -f "${e[dir1]}/$entry" ]] ;                           then $FILE_EDIT "${e[dir1]}/$entry"
-elif [[ -f "${e[dir2]}/$entry" ]] ;                           then $FILE_EDIT "${e[dir2]}/$entry"
-else                                                               $DIR_EDIT  "${e[dir1]}" "${e[dir2]}" "$entry"
-fi
-
-echo -en '\e[?1049h\e[2J' ; stty -echo ; tput civis
-
-list
 }
 
 next_difference()
@@ -127,31 +113,83 @@ echo -en '\e[?1049h' ; stty -echo ; tput civis
 list
 }
 
-synch_to_left() { : ; }
-synch_to_right() { : ; }
-
-delete_left() { : ; }
-delete_right() { : ; }
-
-delete()
+open_diff()
 {
+no_color_key="tree_${e[mode]}_no_color"
 entry="$(tail -n +$((top_line + 1)) "${e[$no_color_key]}" | head -n 1)"
 
-# if   [[ -f "${e[dir1]}/$entry" && -f "${e[dir2]}/$entry" ]] ; then lh=
-# elif [[ -f "${e[dir1]}/$entry" ]] ;                           then lh=
-# elif [[ -f "${e[dir2]}/$entry" ]] ;                           then lh=
-# else                                                              
-# fi
+entry="${entry#./}" ;
+entry="${entry% <!>}" ;
 
-lh=
+if   [[ -f "${e[dir1]}/$entry" && -f "${e[dir2]}/$entry" ]] ; then $DIFF_TOOL "${e[dir1]}/$entry" "${e[dir2]}/$entry"
+elif [[ -f "${e[dir1]}/$entry" ]] ;                           then $FILE_EDIT "${e[dir1]}/$entry"
+elif [[ -f "${e[dir2]}/$entry" ]] ;                           then $FILE_EDIT "${e[dir2]}/$entry"
+else                                                               $DIR_EDIT  "${e[dir1]}" "${e[dir2]}" "$entry"
+fi
 
-{ prompt "delete '$entry' [y|N] ? " -sn1 ; search_string="$REPLY" ; }
-alt_screen
+color_decendents $SYNCHED '' "${e[dir1]}" "./$entry"
+color_decendents $SYNCHED '' "${e[dir2]}" "./$entry"
 
-deleted[$top_line]=1
-
-list
+# echo -en '\e[?1049h\e[2J' ; stty -echo ; tput civis
+alt_screen ; list
 }
+
+# common ---------------------------------------------------------------------
+top_entry() { tail -n +$((top_line + 1)) "${e[$no_color_key]}" | head -n 1 ; }
+
+execute()
+{
+echo -en "\e[H\e[J\n$2" ;
+prompt "execute $1 [y|N] ? " -sn1
+
+while IFS=$'\n' read command ; do
+	IFS=$'\t' read -a elements <<<"$command"
+	
+	[[ "${elements[0]}" =~ ^rm ]] && 
+		{
+		color_decendents $DELETED '' "${elements[1]}" "${elements[2]}"
+		}
+	
+	[[ "${elements[0]}" =~ ^cp ]] && 
+		{
+		[[ "${elements[1]}" == "${e[dir1]}" ]] && DIRECTION='>' || DIRECTION='<'
+		color_decendents $COPIED $DIRECTION "${elements[1]}" "${elements[2]}"
+		color_decendents $COPIED $DIRECTION "${elements[3]}" "${elements[4]}"
+		}
+done <<<"$2"
+
+alt_screen ; list
+}
+
+color_decendents() # color, glyph, path, entry
+{
+(( ${#glyphs[@]} )) || <"${e[tree_${e[mode]}_glyph]}" readarray glyphs 
+
+for line in $(seq $top_line $(( (top_line - 1) + $(grep -P "^$4" "${e[$no_color_key]}" | wc -l) ))) ; do
+	
+	[[ "$2" ]] && glyphs[$line]="$2"
+	glyph="${glyphs[$line]}"
+	
+	[[ "${e[dir1]}" == "$3" ]] && modified1[$line]="$1$glyph" || modified2[$line]="$1$glyph"
+	
+done
+}
+
+# Copy -----------------------------------------------------------------------
+cpc() { [[ -e "$1/$2" ]] && echo -e "cp -r\t$1\t$2\t$3\t$4" ; } 
+
+copy_to_left()  { execute '' "$(rmc "${e[dir1]}" "$(top_entry)")"$'\n'"$(cpc "${e[dir2]}" "$(top_entry)" "${e[dir1]}" "$(top_entry)")" ; }
+copy_to_right() { execute '' "$(rmc "${e[dir2]}" "$(top_entry)")"$'\n'"$(cpc "${e[dir1]}" "$(top_entry)" "${e[dir2]}" "$(top_entry)")" ; }
+
+# Delete ---------------------------------------------------------------------
+
+rmc()   { [[ -f "$1/$2" ]] && echo -e "rm\t$1\t$2" ; [[ -d "$1/$2" ]] && echo -e "rm -rf\t$1\t$2" ; }
+
+delete()       { execute '' "$(rmc "${e[dir1]}" "$(top_entry)")"$'\n'"$(rmc "${e[dir2]}" "$(top_entry)")"  ; }
+delete_left()  { execute '' "$(rmc "${e[dir1]}" "$(top_entry)")"  ; }
+delete_right() { execute '' "$(rmc "${e[dir2]}" "$(top_entry)")"  ; }
+
+# ----------------------------------------------------------------------------
 
 update_status()
 {
@@ -164,9 +202,13 @@ echo -en "\e[$((bottom_line + 2));1H\e[K\e[38;5;240m$status\e[m"
 
 overlay_line()
 {
-(( ${deleted[$2]} )) &&
+[[ ${modified1[$2]} ]] || [[ ${modified2[$2]} ]] &&
 	{
-	echo -en "\e[$1;0H${lines[$2]}\r\e[48;5;166;38;5;233m \e[m"
+	echo -en "\e[$1;0H${lines[$2]}\r${modified1[$2]}\e[m"
+
+	[[ ${modified1[$2]} ]] && echo -en "\e[$1;0H${modified1[$2]}\e[m"
+	[[ ${modified2[$2]} ]] && echo -en "\e[$1;$(( ${pane_columns[1]} + 1 ))H${modified2[$2]}\e[m"
+	
 	return 0
 	}
 
