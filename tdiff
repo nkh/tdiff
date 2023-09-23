@@ -1,7 +1,17 @@
 #!/bin/bash
 
-export DELETED=$'\e[38;5;252;48;5;52m' ; export DIFF=$'\e[38;5;252;48;5;25m'; export ONLY=$'\e[38;5;252;48;5;28m'
-export do_diff=1
+export DELETED=$'\e[38;5;252;48;5;52m'     DIFF=$'\e[38;5;253;48;5;166m'     ONLY=$'\e[38;5;252;48;5;22m'
+export INT_DELETED=$'\e[48;5;88;38;5;251m' INT_DIFF=$'\e[38;5;253;48;5;166m' INT_COPIED=$'\e[48;5;26;38;5;252m' INT_SYNCHED=$'\e[48;5;28;38;5;252m'
+
+export auto_advance=1
+export confirmation=
+export left_side_action=
+
+export DIFF_TOOL=vimdiff FILE_EDIT=vim DIR_EDIT=open_in_ftl
+
+open_in_ftl() { tabs= ; for p in "$PWD/$1/$3" "$PWD/$2/$3" ; do [[ -e "$p" ]] && tabs+="$p$'\n'" ; done ; tmux new-window "ftl -t <(echo -n "$tabs")" ; }
+export -f open_in_ftl
+
 export TDD 
 interactive=1
 
@@ -13,7 +23,7 @@ eval set -- "$options"
 
 while [[ $1 != -- ]]; do
 	case $1 in
-		-m|--mode       ) mode=$1                       ; shift 2 ;;
+		-m|--mode       ) mode=$2                       ; shift 2 ;;
 		-g              ) show_manifest=1 interactive=0 ; shift   ;;
 		-M              ) show_manifest=1               ; shift   ;;
 		-h|--help       )
@@ -40,7 +50,7 @@ shift # -- in argument list to getopt
 { [[ -d "$1" && -d "$2" ]] ||  [[ -f "$1" && -f "$2" ]] ; } ||
 	{ echo tdiff: entries to compare are not of the same type ; exit 1 ; }
 
-: ${mode:=all} 
+: ${mode:=common} 
 [[ "$mode" == all || "$mode" == common || "$mode" = diff || "$mode" == all_d2_only ]] ||
 	{ echo "tdiff: valid modes: all|common|diff|all_d2_only" ; exit 1 ; }
 

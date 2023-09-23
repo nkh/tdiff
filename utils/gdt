@@ -1,0 +1,46 @@
+gdiffd()
+{
+revision=$1
+compare_to=$2
+diff_tool=${GDIFF_TOOL:-meld}
+
+if [ -z $revision ] ; then revision='HEAD' ; fi
+
+if [ $revision = '--help' ] ; then
+	echo "Usage:"
+	echo "  gdiffd                     diffs HEAD and current directory"
+	echo "  gdiffd revision            diffs revision and current directory"
+	echo "  gdiffd revision revision2  diffs revision and revision2"
+	echo ""
+	echo "temporary directories are not deleted"
+else
+	repo=$(basename `git rev-parse --show-toplevel`)
+	path=$(git_checkout_branch_in $revision "/tmp/gdiffd/$repo")
+	
+	if [ $? -ne 0 ] ; then
+		echo $path
+	else
+		if [ -z $compare_to ] ; then
+			compare_to=`pwd`
+
+			$diff_tool $path $compare_to
+		else
+			compare_to=$(git_checkout_branch_in $compare_to "/tmp/gdiffd/$repo")
+		
+			if [ $? -ne 0 ] ; then
+				echo $compare_to
+			else
+				$diff_tool $path $compare_to
+			fi
+		fi
+			
+		gss 
+		echo gdiffd: $path $compare_to
+	fi
+
+fi
+} ;
+__git_complete gdiffd _git_show
+
+# vim: set ft=bash:
+

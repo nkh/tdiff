@@ -1,27 +1,16 @@
-synch files and directories
-	update
-		directory?
-			need to go to all files to verify
-		file, easy to check
 
-	delete
-		directory/file
-			mark and grey
-		
-	copy
-		directory/file
-			show direction
-			grey old
+issue: UI catch errors 
 
-	greying
-		overlay
+issue: shift left right counts characters but glyphs use 3 characters
 
-git diff previous version
-	example script
-	show file diff preview
+bindings: to get information about entries
+	files
+		ls -l
+	
+	directories
+		disk usage, permissions, ...
 
-ftl integrate tree diff
+bindings: next/previous element at previous/same/next level
 
-tdiff -g show summary of changes
-
+bindings: next/previous delete
 

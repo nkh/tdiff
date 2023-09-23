@@ -35,7 +35,9 @@ wait
 
 wait
 cat $fs/diff_d* $fs/fd1 $fs/fd2 | tree -C --fromfile -f --noreport >$fs/tree_all_color
-cat $fs/diff_d* $fs/fd1 $fs/fd2 | tree -n --fromfile -f -i --noreport >$fs/tree_all_no_color
+cat $fs/diff_d* $fs/fd1 $fs/fd2 | tree --fromfile --noreport >$fs/tree_all_color_grey
+cat $fs/diff_d* $fs/fd1 $fs/fd2 | tree -n --fromfile -f -i --noreport | sed -e 's#^\./##' -e 's/\ <!>$//' >$fs/tree_all_no_color
+
 
 
 perl $(dirname $0)/tag_tree.pl "$1" "$DIFF" $fs/diff_files "$DELETED" <(cat $fs/diff_d1 $fs/only_d2) "" <(:) $fs/tree_all_color \
@@ -45,7 +47,8 @@ perl $(dirname $0)/tag_tree.pl "$2" "$DIFF" $fs/diff_files "$DELETED" <(cat $fs/
 	>$fs/tree_all_d2 3>/dev/null 4>$fs/tree_all_d2_delete_index &
 
 cat $fs/diff_d* $fs/only_d1 $fs/only_d2 $fs/diff_files | tree -C --fromfile -f --noreport >$fs/tree_common_color
-cat $fs/diff_d* $fs/only_d1 $fs/only_d2 $fs/diff_files | tree -n --fromfile -f -i --noreport >$fs/tree_common_no_color
+cat $fs/diff_d* $fs/only_d1 $fs/only_d2 $fs/diff_files | tree --fromfile --noreport >$fs/tree_common_color_grey
+cat $fs/diff_d* $fs/only_d1 $fs/only_d2 $fs/diff_files | tree -n --fromfile -f -i --noreport | sed -e 's#^\./##' -e 's/\ <!>$//' >$fs/tree_common_no_color
 
 wait
 perl $(dirname $0)/tag_tree.pl "$1" "$DIFF" $fs/diff_files "$DELETED" <(cat $fs/diff_d1 $fs/only_d2) "" <(:) $fs/tree_common_color \
@@ -55,7 +58,8 @@ perl $(dirname $0)/tag_tree.pl "$2" "$DIFF" $fs/diff_files "$DELETED" <(cat $fs/
 	>$fs/tree_common_d2 3>/dev/null 4>$fs/tree_common_d2_delete_index &
 
 cat $fs/diff_files | tree -C --fromfile -f --noreport >$fs/tree_diff_color
-cat $fs/diff_files | tree -n --fromfile -f -i --noreport >$fs/tree_diff_no_color
+cat $fs/diff_files | tree --fromfile --noreport >$fs/tree_diff_color_grey
+cat $fs/diff_files | tree -n --fromfile -f -i --noreport | sed -e 's#^\./##' -e 's/\ <!>$//' >$fs/tree_diff_no_color
 
 wait
 <$fs/tree_all_color    sed -e 's/\x1B\[[0-9;]\{1,\}[A-Za-z]//g' -e 's/^\(.\).*/\1/' >$fs/tree_all_glyph &
@@ -93,6 +97,7 @@ declare -A e=(
 	[only_d1]="$fs/only_d1"
 	[only_d2]="$fs/only_d2"
 	[tree_all_color]="$fs/tree_all_color"
+	[tree_all_color_grey]="$fs/tree_all_color_grey"
 	[tree_all_no_color]="$fs/tree_all_no_color"
 	[tree_all_glyph]="$fs/tree_all_glyph"
 	[tree_all_d1]="$fs/tree_all_d1"
@@ -107,9 +112,11 @@ declare -A e=(
 	[tree_all_d2_only]="$fs/tree_all_d2_only"
 	[tree_all_d2_only_glyph]="$fs/tree_all_d2_only_glyph"
 	[tree_all_d2_only_no_color]="$fs/tree_all_no_color"
+	[tree_all_d2_only_color_grey]="$fs/tree_all_color_grey"
 	[tree_all_d2_only_delete_index]="$fs/tree_all_d2_only_delete_index"
 	[tree_all_d2_only_diff_index]="$fs/tree_all_diff_index"
 	[tree_common_color]="$fs/tree_common_color"
+	[tree_common_color_grey]="$fs/tree_common_color_grey"
 	[tree_common_glyph]="$fs/tree_common_glyph"
 	[tree_common_no_color]="$fs/tree_common_no_color"
 	[tree_common_d1]="$fs/tree_common_d1"
@@ -118,6 +125,7 @@ declare -A e=(
 	[tree_common_d2_delete_index]="$fs/tree_common_d2_delete_index"
 	[tree_common_diff_index]="$fs/tree_common_diff_index"
 	[tree_diff_color]="$fs/tree_diff_color"
+	[tree_diff_color_grey]="$fs/tree_diff_color_grey"
 	[tree_diff_glyph]="$fs/tree_diff_glyph"
 	[tree_diff_no_color]="$fs/tree_diff_no_color"
 	[tree_diff]="$fs/tree_diff"
