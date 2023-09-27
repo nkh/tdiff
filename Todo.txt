@@ -1,7 +1,3 @@
 
 issue: UI catch errors 
 
-issue: shift left right counts characters but glyphs use 3 characters
-
-bindings: next/previous difference, deleted, changed, or different type
-

@@ -2,7 +2,7 @@
 
 declare -A modified1 modified2 
 
-unbind c # default paneless key but we want to use c for something else
+unbind c # default paneless key but we  use c for something else
 
 bind tdiff display	ZL		flip_line_number	"flip line number overlay"
 bind tdiff display	ZT		flip_line_total		"flip line total"
@@ -11,10 +11,12 @@ bind tdiff bindings	QUESTION_MARK	k_bindings		"show command bindings"
 
 bind tdiff mode		m		next_mode		"next view mode"
 bind tdiff mode		M		previous_mode		"previous view mode"
+bind tdiff mode		r		refresh_diff		"refresh diff"
 
 bind tdiff find		n		next_difference		"next difference"
 bind tdiff find		N		previous_difference	"previous difference"
-bind tdiff find		gff		diff_fzf		"fzf select diff"
+bind tdiff find		v		next_difference_all	"next deleted/changed/different type"
+bind tdiff find		V		previous_difference_all	"previous deleted/changed/different type"
 bind tdiff find		b		diff_fzf		"fzf select diff"
 bind tdiff find		B		file_fzf		"fzf select file"
 bind tdiff find		a		up_one_level		"scroll up one level"
@@ -24,7 +26,7 @@ bind tdiff find		x		down_same_level		"scroll down to next entry with the same le
 
 bind tdiff edit		ENTER		open_diff		"open diff"
 bind tdiff edit		F		file_manager		"open file manager"
-bind tdiff edit		AL		action_left		"disabel/allow action on the left side tree"
+bind tdiff edit		AL		action_left		"disable/allow action on the left side tree"
 
 bind tdiff delete	dd		delete			"delete both sides"
 bind tdiff delete	dl		delete_left		"delete left"
@@ -38,6 +40,15 @@ bind tdiff synch	cl		copy_to_left		"copy to left"
 bind tdiff synch	cr		copy_to_right		"copy to right"
 
 bind tdiff info		i		entries_information	"display some information about the entries"
+
+refresh_diff()
+{
+clear ; echo "Refreshing ..."
+
+tdiff -g --fs "${e[fs]}" "${e[dir1]}" "${e[dir2]}" &>/dev/null &&
+	{ apply_mode ; } ||
+	{ echo "tdiff: error: can't refresh" ; read -sn1 ; list ; }
+}
 
 tdiff_setup()
 {
@@ -54,11 +65,12 @@ index_file="${e[tree_${e[mode]}_diff_index]}"
 <"$index_file"         readarray -t diff_index
 < <(tac "$index_file") readarray -t diff_index_reversed
 
+declare -Ag diff_entries=() ; for i in "${diff_index[@]}" ; do diff_entries[$i]=1 ; done
+
 <"${e[tree_${e[mode]}_glyph]}" readarray -t glyphs 
 <"${e[tree_${e[mode]}_color_grey]}" readarray -t grey_lines
 
-entry_names=()
-<"${e[tree_${e[mode]}_no_color]}" readarray -t entry_names
+entry_names=() ; <"${e[tree_${e[mode]}_no_color]}" readarray -t entry_names
 
 < <(<"${e[tree_${e[mode]}_no_color]}" awk -F '/' '{print NF}' ) readarray -t levels
 }
@@ -111,6 +123,42 @@ previous_difference()
 {
 for i in "${diff_index_reversed[@]}" ; do ((i < top_line)) && { found=$i ; break ; } ; done 
 [[ "$found" ]] && { ((top_line = found)) ; highlight=1 ; list ; } || { highlight= ; list ; }
+}
+
+next_difference_all()
+{
+(( top_line >= max_lines )) && return
+
+for (( l = top_line + 1 ; l < max_lines ; l++)) ; do
+	entry="${entry_names[$l]}"
+
+	[[ -e "${e[dir1]}/$entry" && -e "${e[dir2]}/$entry" ]] || break 
+
+	[[ -f "${e[dir1]}/$entry" && -f "${e[dir2]}/$entry" ]] || [[ -d "${e[dir1]}/$entry" && -d "${e[dir2]}/$entry" ]] || break 
+
+	[[ -f "${e[dir1]}/$entry" && -f "${e[dir2]}/$entry" ]] && (( ${diff_entries[$l]} ))  && break
+
+done 
+
+top_line=$l ; list
+}
+
+previous_difference_all()
+{
+(( top_line == 0 )) && return
+
+for (( l = top_line - 1 ; l > 0 ; l--)) ; do
+	entry="${entry_names[$l]}"
+
+	[[ -e "${e[dir1]}/$entry" && -e "${e[dir2]}/$entry" ]] || break 
+
+	[[ -f "${e[dir1]}/$entry" && -f "${e[dir2]}/$entry" ]] || [[ -d "${e[dir1]}/$entry" && -d "${e[dir2]}/$entry" ]] || break 
+
+	[[ -f "${e[dir1]}/$entry" && -f "${e[dir2]}/$entry" ]] && (( ${diff_entries[$l]} ))  && break
+
+done 
+
+top_line=$l ; list
 }
 
 up_one_level()
@@ -224,8 +272,9 @@ fi
 [[ -f "${e[dir1]}/$entry" && -f "${e[dir2]}/$entry" ]] && 
 	{
 	diff -q "${e[dir1]}/$entry" "${e[dir2]}/$entry" >/dev/null &&
-		{ modified1[$entry]="$INT_SYNCHED" ; modified2[$entry]="$INT_SYNCHED" ; (( auto_advance )) && next_difference ; } ||
-		{ modified1[$entry]="$INT_DIFF" ; modified2[$entry]="$INT_DIFF" ; }
+		{ diff_entries[$top_line]=  ; modified1[$entry]="$INT_SYNCHED" ; modified2[$entry]="$INT_SYNCHED" ; (( auto_advance )) && next_difference ; } ||
+		{ diff_entries[$top_line]=1 ; modified1[$entry]="$INT_DIFF" ; modified2[$entry]="$INT_DIFF" ; }
+	
 	}
 
 alt_screen ; list

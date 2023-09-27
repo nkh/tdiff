@@ -2,7 +2,7 @@
 
 [[ -n "$1" && -n "$2" && -n "$3" ]] || { echo "$1 - $2 - $3 - tree_synch: error: two entries and a mode needed." >&2 ; exit 1 ; }
 
-fs="$(mktemp -u -p /tmp/$USER tree_diff_XXXXXX)" ;
+[[ -n "$4" ]] && fs="$4" || fs="$(mktemp -u -p /tmp/$USER tree_diff_XXXXXX)" ;
 mkdir -p $fs # work directory
 :>$fs/diff_files
 
@@ -88,6 +88,7 @@ mode="$3"
 [[ "$mode" == all_d2_only ]] && { tree1="$fs/tree_all_d2_only"  ; tree2=                     ; }
 
 declare -A e=(
+	[fs]="$fs"
 	[mode]=$mode
 	[dir1]="$1"
 	[dir2]="$2"

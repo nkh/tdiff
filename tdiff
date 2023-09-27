@@ -5,7 +5,7 @@ export INT_DELETED=$'\e[48;5;88;38;5;251m' INT_DIFF=$'\e[38;5;253;48;5;166m' INT
 
 export auto_advance=1
 export confirmation=
-export left_side_action=
+export left_side_action=1
 
 export DIFF_TOOL=vimdiff FILE_EDIT=vim DIR_EDIT=open_in_ftl
 
@@ -18,11 +18,12 @@ interactive=1
 # Parse options
 [[ "$1" ]]  || { echo "paneless: need at least one input" ; exit 1 ; }
 
-options=$(getopt -o g,h,m:,M -l help,mode: -n "$0" -- "$@") || exit
+options=$(getopt -o g,h,m:,M -l fs:,help,mode: -n "$0" -- "$@") || exit
 eval set -- "$options"
 
 while [[ $1 != -- ]]; do
 	case $1 in
+		--fs            ) fs=$2                         ; shift 2 ;;
 		-m|--mode       ) mode=$2                       ; shift 2 ;;
 		-g              ) show_manifest=1 interactive=0 ; shift   ;;
 		-M              ) show_manifest=1               ; shift   ;;
@@ -54,7 +55,7 @@ shift # -- in argument list to getopt
 [[ "$mode" == all || "$mode" == common || "$mode" = diff || "$mode" == all_d2_only ]] ||
 	{ echo "tdiff: valid modes: all|common|diff|all_d2_only" ; exit 1 ; }
 
-{ read tree1 ; read tree2 ; read manifest ; } < <($(dirname $0)/tree_synch "$1" "$2" "$mode") || exit
+{ read tree1 ; read tree2 ; read manifest ; } < <($(dirname $0)/tree_synch "$1" "$2" "$mode" "$fs") || exit
 
 (( interactive ))   && paneless -a --no-color -c $(dirname $0)/tdiff.pless --status-line -E "$manifest" $tree1 $tree2 
 (( show_manifest )) && echo "tdiff: manifest: $manifest" 
