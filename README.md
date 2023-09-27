@@ -120,6 +120,7 @@ See ***Paneless*** for default bindings https://github.com/nkh/paneless
 | yr      | copy right path to clipboard |
 | ENTER   | open diff/file/directory     |
 | F       | open file manager            |
+| i       | display stats                |
 | AL      | flip Action Left             |
 | ZL      | flip line number overlay     |
 | ZL      | flip line totali             |

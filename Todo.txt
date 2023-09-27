@@ -3,14 +3,5 @@ issue: UI catch errors
 
 issue: shift left right counts characters but glyphs use 3 characters
 
-bindings: to get information about entries
-	files
-		ls -l
-	
-	directories
-		disk usage, permissions, ...
-	
-	one after the other
-
-bindings: next/previous delete or changed
+bindings: next/previous difference, deleted, changed, or different type
 

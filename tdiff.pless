@@ -37,6 +37,8 @@ bind tdiff clipboard	yr		clipboard_right		"copy to clipboard right side"
 bind tdiff synch	cl		copy_to_left		"copy to left"
 bind tdiff synch	cr		copy_to_right		"copy to right"
 
+bind tdiff info		i		entries_information	"display some information about the entries"
+
 tdiff_setup()
 {
 load_support_files
@@ -179,6 +181,35 @@ alt_screen ; list
 }
 
 file_manager() { $DIR_EDIT "${e[dir1]}" "${e[dir2]}" "$(top_entry)"  ; alt_screen ; list ; }
+
+entries_information()
+{
+entry="$(top_entry)"
+
+clear ;
+
+_entries_information "${e[dir1]}/$entry"
+echo -e "\n---\n"
+_entries_information "${e[dir2]}/$entry"
+
+read -sn1
+
+list
+}
+
+_entries_information()
+{
+[[ ! -e "$1" ]] && echo "Deleted" 
+
+[[ -f "$1" ]] && stat "$1"
+
+[[ -d "$1" ]] &&
+	{
+	stat "$1"
+	echo -n " Files: " ; find "$1" | wc -l
+	echo -n "  Size: " ; du -hs "$1" | cut -f1
+	}
+}
 
 open_diff()
 {
