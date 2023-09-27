@@ -103,6 +103,10 @@ See ***Paneless*** for default bindings https://github.com/nkh/paneless
 | ?       | show bindings                |
 | m/M     | next/previous mode           |
 | n/N     | next/previous diff           |
+| a       | scroll up one level          |
+| z       | scroll down one level        |
+| s       | scroll up same level         |
+| x       | scroll down same level       |
 | b       | fzf to diff                  |
 | gff     | fzf to diff                  |
 | B       | fzf to file                  |
@@ -116,6 +120,9 @@ See ***Paneless*** for default bindings https://github.com/nkh/paneless
 | yr      | copy right path to clipboard |
 | ENTER   | open diff/file/directory     |
 | F       | open file manager            |
+| AL      | flip Action Left             |
+| ZL      | flip line number overlay     |
+| ZL      | flip line totali             |
 
 # EXAMPLES
 

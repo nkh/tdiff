@@ -4,6 +4,9 @@ declare -A modified1 modified2
 
 unbind c # default paneless key but we want to use c for something else
 
+bind tdiff display	ZL		flip_line_number	"flip line number overlay"
+bind tdiff display	ZT		flip_line_total		"flip line total"
+
 bind tdiff bindings	QUESTION_MARK	k_bindings		"show command bindings"
 
 bind tdiff mode		m		next_mode		"next view mode"
@@ -14,10 +17,14 @@ bind tdiff find		N		previous_difference	"previous difference"
 bind tdiff find		gff		diff_fzf		"fzf select diff"
 bind tdiff find		b		diff_fzf		"fzf select diff"
 bind tdiff find		B		file_fzf		"fzf select file"
+bind tdiff find		a		up_one_level		"scroll up one level"
+bind tdiff find		z		down_one_level		"scroll down one level"
+bind tdiff find		s		up_same_level		"scroll up to next entry with the same level"
+bind tdiff find		x		down_same_level		"scroll down to next entry with the same level"
 
 bind tdiff edit		ENTER		open_diff		"open diff"
 bind tdiff edit		F		file_manager		"open file manager"
-bind tdiff edit		al		action_left		"disabel/allow action on the left side tree"
+bind tdiff edit		AL		action_left		"disabel/allow action on the left side tree"
 
 bind tdiff delete	dd		delete			"delete both sides"
 bind tdiff delete	dl		delete_left		"delete left"
@@ -50,6 +57,8 @@ index_file="${e[tree_${e[mode]}_diff_index]}"
 
 entry_names=()
 <"${e[tree_${e[mode]}_no_color]}" readarray -t entry_names
+
+< <(<"${e[tree_${e[mode]}_no_color]}" awk -F '/' '{print NF}' ) readarray -t levels
 }
 
 tdiff_setup
@@ -100,6 +109,58 @@ previous_difference()
 {
 for i in "${diff_index_reversed[@]}" ; do ((i < top_line)) && { found=$i ; break ; } ; done 
 [[ "$found" ]] && { ((top_line = found)) ; highlight=1 ; list ; } || { highlight= ; list ; }
+}
+
+up_one_level()
+{
+(( top_line  == 0 )) && return
+
+cl=${levels[$top_line]}
+[[ "$cl" ]] || cl=${levels[((max_lines -1))]}
+
+for (( l = top_line - 1 ; l > 0 ; l--)) ; do
+	(( ${levels[$l]} < $cl )) && break
+done 
+
+top_line=$l ; list
+}
+
+down_one_level()
+{
+cl=${levels[$top_line]}
+[[ "$cl" ]] || return
+
+for (( l = top_line + 1 ; l < max_lines ; l++)) ; do
+	(( ${levels[$l]} < $cl || ${levels[$l]} > $cl )) && break
+done 
+
+top_line=$l ; list
+}
+
+up_same_level()
+{
+(( top_line  == 0 )) && return
+
+cl=${levels[$top_line]}
+[[ "$cl" ]] || cl=${levels[((max_lines -1))]}
+
+for (( l = top_line - 1 ; l > 0 ; l--)) ; do
+	(( ${levels[$l]} <= $cl )) && break
+done 
+
+top_line=$l ; list
+}
+
+down_same_level()
+{
+cl=${levels[$top_line]}
+[[ "$cl" ]] || return
+
+for (( l = top_line + 1 ; l < max_lines ; l++)) ; do
+	(( ${levels[$l]} <= $cl )) && break
+done 
+
+top_line=$l ; list
 }
 
 diff_fzf()

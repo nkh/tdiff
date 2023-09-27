@@ -9,8 +9,8 @@ bindings: to get information about entries
 	
 	directories
 		disk usage, permissions, ...
+	
+	one after the other
 
-bindings: next/previous element at previous/same/next level
-
-bindings: next/previous delete
+bindings: next/previous delete or changed
 
