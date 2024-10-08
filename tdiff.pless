@@ -108,6 +108,7 @@ apply_mode()
 
 echo -ne "\e[H\e[J"
 
+alt_screen
 load_support_files
 reload_input_streams $tree1 $tree2
 }
@@ -263,6 +264,8 @@ open_diff()
 {
 entry="$(top_entry)"
 
+# restore_screen 
+
 if   [[ -f "${e[dir1]}/$entry" && -f "${e[dir2]}/$entry" ]] ; then $DIFF_TOOL "${e[dir1]}/$entry" "${e[dir2]}/$entry"
 elif [[ -f "${e[dir1]}/$entry" ]] ;                           then $FILE_EDIT "${e[dir1]}/$entry"
 elif [[ -f "${e[dir2]}/$entry" ]] ;                           then $FILE_EDIT "${e[dir2]}/$entry"
@@ -273,7 +276,7 @@ fi
 	{
 	diff -q "${e[dir1]}/$entry" "${e[dir2]}/$entry" >/dev/null &&
 		{ diff_entries[$top_line]=  ; modified1[$entry]="$INT_SYNCHED" ; modified2[$entry]="$INT_SYNCHED" ; (( auto_advance )) && next_difference ; } ||
-		{ diff_entries[$top_line]=1 ; modified1[$entry]="$INT_DIFF" ; modified2[$entry]="$INT_DIFF" ; }
+		{ diff_entries[$top_line]=1 ; modified1[$entry]="$INT_DIFF"    ; modified2[$entry]="$INT_DIFF" ; }
 	
 	}
 

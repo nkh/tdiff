@@ -182,6 +182,17 @@ open_in_ftl() { tabs= ; for p in "$PWD/$1/$3" "$PWD/$2/$3" ; do [[ -e "$p" ]] &&
 ```
 They reflect my environment so you'll need to set them up if they don't match yours. You certainly will have to set your file manager.
 
+## Color Vision Deficiencies
+
+You can set colors and intensities that suits you best in the configuration and also use the terminal codes below. Let me know what worked best for you.
+
+| code  | effect        |
+| ----- | ------------- |
+| \e[3m | italic        |
+| \e[4m | underline     |
+| \e[5m | blinking      |
+| \e[9m | strikethrough |
+
 ## Extra Config
 
 ### Sort order
