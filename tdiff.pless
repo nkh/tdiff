@@ -7,7 +7,7 @@ unbind c # default paneless key but we  use c for something else
 bind tdiff display	ZL		flip_line_number	"flip line number overlay"
 bind tdiff display	ZT		flip_line_total		"flip line total"
 
-bind tdiff bindings	QUESTION_MARK	k_bindings		"show command bindings"
+bind tdiff bindings	QUESTION_MARK	kbd_bindings		"show command bindings"
 
 bind tdiff mode		m		next_mode		"next view mode"
 bind tdiff mode		M		previous_mode		"previous view mode"

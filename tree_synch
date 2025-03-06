@@ -34,11 +34,11 @@ wait
 <$fs/the_diff perl -ne 's/^File (.*?\/)?(.+?) is a directory while .+/$1$2 <!>/ and print' | sed 's#'"$1"'/##' >$fs/diff_d1 &
 
 wait
-cat $fs/diff_d* $fs/fd1 $fs/fd2 | tree -C --fromfile -f --noreport >$fs/tree_all_color
-cat $fs/diff_d* $fs/fd1 $fs/fd2 | tree --fromfile --noreport >$fs/tree_all_color_grey
-cat $fs/diff_d* $fs/fd1 $fs/fd2 | tree -n --fromfile -f -i --noreport | sed -e 's#^\./##' -e 's/\ <!>$//' >$fs/tree_all_no_color
+cat $fs/diff_d* $fs/fd1 $fs/fd2 | tree -C --fromfile -f --noreport >$fs/tree_all_color &
+cat $fs/diff_d* $fs/fd1 $fs/fd2 | tree --fromfile --noreport >$fs/tree_all_color_grey &
+cat $fs/diff_d* $fs/fd1 $fs/fd2 | tree -n --fromfile -f -i --noreport | sed -e 's#^\./##' -e 's/\ <!>$//' >$fs/tree_all_no_color &
 
-
+wait
 
 perl $(dirname $0)/tag_tree.pl "$1" "$DIFF" $fs/diff_files "$DELETED" <(cat $fs/diff_d1 $fs/only_d2) "" <(:) $fs/tree_all_color \
 	>$fs/tree_all_d1 3>$fs/tree_all_diff_index 4>$fs/tree_all_d1_delete_index &
@@ -57,9 +57,9 @@ perl $(dirname $0)/tag_tree.pl "$1" "$DIFF" $fs/diff_files "$DELETED" <(cat $fs/
 perl $(dirname $0)/tag_tree.pl "$2" "$DIFF" $fs/diff_files "$DELETED" <(cat $fs/diff_d2 $fs/only_d1) "" <(:) $fs/tree_common_color \
 	>$fs/tree_common_d2 3>/dev/null 4>$fs/tree_common_d2_delete_index &
 
-cat $fs/diff_files | tree -C --fromfile -f --noreport >$fs/tree_diff_color
-cat $fs/diff_files | tree --fromfile --noreport >$fs/tree_diff_color_grey
-cat $fs/diff_files | tree -n --fromfile -f -i --noreport | sed -e 's#^\./##' -e 's/\ <!>$//' >$fs/tree_diff_no_color
+cat $fs/diff_files | tree -C --fromfile -f --noreport >$fs/tree_diff_color &
+cat $fs/diff_files | tree --fromfile --noreport >$fs/tree_diff_color_grey &
+cat $fs/diff_files | tree -n --fromfile -f -i --noreport | sed -e 's#^\./##' -e 's/\ <!>$//' >$fs/tree_diff_no_color &
 
 wait
 <$fs/tree_all_color    sed -e 's/\x1B\[[0-9;]\{1,\}[A-Za-z]//g' -e 's/^\(.\).*/\1/' >$fs/tree_all_glyph &
